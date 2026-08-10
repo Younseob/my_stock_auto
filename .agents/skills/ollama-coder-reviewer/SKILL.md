@@ -1,55 +1,56 @@
 ---
 name: ollama-coder-reviewer
 description: >
-  Run local Coder and Tester agents using Ollama qwen2.5-coder:14b.
-  The Orchestrator (any Antigravity model: Gemini, Claude, etc.) acts as Planner & Reviewer ONLY.
-  ALL code writing and testing MUST be delegated to qwen2.5-coder:14b via ollama_agent.js.
+  Cline worktree(pearlside) 기반 4-Role 멀티에이전트 워크플로우.
+  Orchestrator(Antigravity 활성 모델: Gemini, Claude 등)는 Planner & Reviewer만 담당.
+  ALL code writing and testing은 Cline Agent(pearlside worktree, qwen2.5-coder:14b)에 위임.
 ---
 
-# Multi-Agent Workflow: Planner → Coder → Tester → Reviewer
+# Multi-Agent Workflow: Planner → Cline(pearlside) → Reviewer
 
-> ⚠️ **MANDATORY**: The Orchestrator (Antigravity active model, regardless of whether it is
-> Gemini Flash, Claude Sonnet, or any other model) **MUST NOT write code files directly**.
-> All code implementation and testing is delegated to Local Ollama `qwen2.5-coder:14b`.
+> ⚠️ **MANDATORY**: Orchestrator는 소스 코드를 직접 작성하지 않는다.
+> Cline이 `pearlside` worktree에서 직접 구현, 실행, 테스트한다.
 
 ---
 
-## Roles
+## Worktree 구조
 
-| Role | Agent | Allowed Actions |
+| 브랜치 | 경로 | 담당 |
 |:---|:---|:---|
-| **Planner** | Orchestrator (Antigravity) | Requirements analysis, architecture design, task spec writing |
-| **Coder** | `qwen2.5-coder:14b` (Local Ollama) | Code writing, file editing, refactoring |
-| **Tester** | `qwen2.5-coder:14b` (Local Ollama) | Test execution, bug reporting, edge case verification |
-| **Reviewer** | Orchestrator (Antigravity) | Final code review, security audit, APPROVED or re-work |
+| `master` | `C:\Users\gosys\orca\projects\my_stock_auto` | Orchestrator (읽기 전용 참조) |
+| `pearlside` | `C:\Users\gosys\orca\workspaces\my_stock_auto\pearlside` | **Cline 작업 공간** |
 
 ---
 
-## Workflow Execution
+## Workflow
 
-### Step 1 — Planner writes the spec (Orchestrator only — no code!)
-Define inputs, outputs, constraints, and file targets.
+### Step 1 — Planner (Orchestrator)
+- 요구사항 분석 & 아키텍처 설계
+- `.agents/tasks/<task>.md` 명세 파일 작성 (TASK_TEMPLATE.md 참조)
+- Cline에 태스크 지시
 
-### Step 2 — Delegate to Coder
-```bash
-node .agents/scripts/ollama_agent.js coder "<Implementation Spec>"
-```
+### Step 2 — Cline (pearlside worktree에서 실행)
+- 태스크 파일 읽기
+- `pearlside` 브랜치에서 파일 직접 생성/수정
+- 터미널에서 코드 실행 및 테스트
+- 실패 시 자율 수정 → 재테스트 (loop)
+- 완료 시 pearlside 커밋 + 결과 보고
 
-### Step 3 — Delegate to Tester
-```bash
-node .agents/scripts/ollama_agent.js tester "<Test Spec & Validation Conditions>"
-```
-Repeat Steps 2–3 until all tests pass (100% pass rate).
-
-### Step 4 — Reviewer approves (Orchestrator only)
-Review the final code for architecture fit, security, and conventions.
-Declare: **APPROVED** or request re-work (→ back to Step 2).
+### Step 3 — Reviewer (Orchestrator)
+- pearlside 코드 읽기 전용 검토
+- **APPROVED**: master merge
+  ```bash
+  git -C C:\Users\gosys\orca\projects\my_stock_auto merge pearlside --no-ff -m "feat: <기능명>"
+  ```
+- **수정 필요**: 태스크 파일 업데이트 → Step 2 재시작
 
 ---
 
-## Violation Warning
+## ❌ 폐기된 방식 (ollama_agent.js)
 
-If the Orchestrator uses `write_to_file`, `replace_file_content`, or `multi_replace_file_content`
-on source code files without delegating through `ollama_agent.js` first, this is a **workflow violation**.
+`node .agents/scripts/ollama_agent.js coder "..."` 방식은 **폐기**되었습니다.
+Cline worktree 방식으로 완전 전환되었습니다.
 
-Exception: Documentation files (AGENTS.md, rules/*.md, SKILL.md) may be edited directly by the Orchestrator.
+이유:
+- `ollama_agent.js`는 텍스트 응답만 반환 → Orchestrator가 직접 파일 작성 필요 → 규칙 위반 구조
+- Cline은 파일 직접 편집 + 터미널 실행 + 자율 수정 가능 → 규칙 준수 구조
