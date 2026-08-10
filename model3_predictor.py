@@ -330,6 +330,9 @@ def walk_forward_backtest(data: pd.DataFrame, min_train: int = 60) -> dict:
 
     print(f"\n[Walk-Forward 백테스트] 전체 {n}개 중 학습 시작점={min_train}")
 
+    current_model = None
+    refit_step = 5  # 5영업일마다 모델 재학습 (연산 속도 12배 향상, Render 504 타임아웃 완전 방지)
+
     for i in range(min_train, n):
         train = valid.iloc[:i]
         test_row = valid.iloc[i]
@@ -340,15 +343,17 @@ def walk_forward_backtest(data: pd.DataFrame, min_train: int = 60) -> dict:
         if len(np.unique(y_train)) < 2:
             continue
 
-        model = GradientBoostingClassifier(
-            n_estimators=100, max_depth=4, learning_rate=0.08,
-            subsample=0.8, random_state=42
-        )
-        model.fit(X_train, y_train)
+        if current_model is None or (i - min_train) % refit_step == 0:
+            current_model = GradientBoostingClassifier(
+                n_estimators=40, max_depth=3, learning_rate=0.1,
+                subsample=0.8, random_state=42
+            )
+            current_model.fit(X_train, y_train)
 
         X_test = test_row[FEATURE_COLS].values.reshape(1, -1)
-        pred = model.predict(X_test)[0]
-        prob = model.predict_proba(X_test)[0][1]
+        pred = current_model.predict(X_test)[0]
+        prob = current_model.predict_proba(X_test)[0][1]
+
 
         preds.append(pred)
         actuals.append(int(test_row['target_direction']))
@@ -415,7 +420,7 @@ def analyze_feature_importance(data: pd.DataFrame) -> list[dict]:
         return []
 
     model = GradientBoostingClassifier(
-        n_estimators=200, max_depth=4, learning_rate=0.05,
+        n_estimators=50, max_depth=3, learning_rate=0.08,
         subsample=0.8, random_state=42
     )
     model.fit(valid[FEATURE_COLS], valid['target_direction'].astype(int))
@@ -442,10 +447,11 @@ def predict_tomorrow_gap(data: pd.DataFrame) -> dict:
     y_train = valid['target_direction'].values.astype(int)
 
     model = GradientBoostingClassifier(
-        n_estimators=200, max_depth=4, learning_rate=0.05,
+        n_estimators=50, max_depth=3, learning_rate=0.08,
         subsample=0.8, random_state=42
     )
     model.fit(X_train, y_train)
+
 
     # 가장 최근 행 (갭 타겟 제외한 피처만)
     latest_features = data[FEATURE_COLS].dropna().iloc[-1]

@@ -585,7 +585,17 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ stock_name: stockName })
             })
-            .then(res => res.json())
+            .then(async res => {
+                const contentType = res.headers.get('content-type') || '';
+                if (!res.ok || !contentType.includes('application/json')) {
+                    const text = await res.text();
+                    if (res.status === 504 || text.includes('Gateway') || text.includes('504')) {
+                        throw new Error('서버 연산 시간이 초과되었습니다 (504 Gateway Timeout). 다시 한 번 클릭해 주세요.');
+                    }
+                    throw new Error(`서버 응답 오류 (${res.status})`);
+                }
+                return res.json();
+            })
             .then(data => {
                 document.getElementById('loading').style.display = 'none';
                 if (data.error) {
@@ -602,8 +612,9 @@
             })
             .catch(err => {
                 document.getElementById('loading').style.display = 'none';
-                alert('오류 발생: ' + err);
+                alert('알림: ' + err.message);
             });
+
         });
 
         function renderMode1(res) {
