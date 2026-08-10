@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 주가 예측 & 백테스트 대시보드</title>
+    <!-- Google Fonts & Chart.js -->
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(22, 30, 49, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --primary-accent: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.35);
+            --up-color: #10b981;
+            --down-color: #ef4444;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.12) 0%, transparent 40%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .logo-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, #6366f1, #10b981);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            background: linear-gradient(120deg, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Tabs */
+        .tab-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: var(--primary-accent);
+            color: #fff;
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        /* Search Section */
+        .search-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .search-form {
+            display: flex;
+            gap: 12px;
+        }
+
+        .input-group {
+            flex: 1;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .btn-search {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px var(--primary-glow);
+        }
+
+        .btn-search:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+        }
+
+        .cache-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .cache-hit {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .cache-miss {
+            background: rgba(99, 102, 241, 0.15);
+            color: #818cf8;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        /* Grid & Cards */
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.25rem;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .stat-sub {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .prediction-box {
+            grid-column: span 2;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .pred-dir-up {
+            color: var(--up-color);
+            font-size: 2rem;
+            font-weight: 800;
+        }
+
+        .pred-dir-down {
+            color: var(--down-color);
+            font-size: 2rem;
+            font-weight: 800;
+        }
+
+        /* Table */
+        .data-table-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.9rem;
+        }
+
+        th {
+            background: rgba(15, 23, 42, 0.6);
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-correct {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+        }
+
+        .badge-wrong {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        /* Chart Card */
+        .chart-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid var(--primary-accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-title">
+                <div class="logo-icon">📊</div>
+                <div>
+                    <h1>AI 주가 예측 & 백테스트 대시보드</h1>
+                    <p style="font-size:0.85rem; color:var(--text-muted)">Walk-Forward Engine, 2-Year Out-of-Sample Accuracy & SQLite Cache</p>
+                </div>
+            </div>
+            <div id="cache-badge-container"></div>
+        </header>
+
+        <!-- Mode Select Tabs -->
+        <div class="tab-bar">
+            <button class="tab-btn active" id="tab-1yr" onclick="switchMode('1yr')">⚡ 모드 1: 1년 워크포워드 시뮬레이션</button>
+            <button class="tab-btn" id="tab-2yr" onclick="switchMode('2yr')">🔬 모드 2: 2년 Out-of-Sample 정확도 검증</button>
+            <button class="tab-btn" id="tab-m3" onclick="switchMode('m3')">🌅 모드 3: 시가 갭 예측 (코스피+수급)</button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-card">
+            <form class="search-form" id="search-form">
+                <div class="input-group">
+                    <input type="text" id="stock-name" placeholder="종목명 입력 (예: 씨에스윈드, 삼성전자, SK하이닉스)" value="씨에스윈드" required>
+                </div>
+                <button type="submit" class="btn-search">예측 & 분석 실행</button>
+            </form>
+        </div>
+
+        <!-- Loading -->
+        <div class="loading-spinner" id="loading">
+            <div class="spinner"></div>
+            <p style="color:var(--text-muted)">데이터 수집 및 머신러닝 백테스팅 계산 중...</p>
+        </div>
+
+        <!-- MODE 1: 1년 워크포워드 View -->
+        <div id="mode-1yr-content" style="display:none;">
+            <div class="results-grid">
+                <div class="prediction-box">
+                    <div>
+                        <div class="stat-label">내일 주가 방향 예측 (D+1)</div>
+                        <div id="m1-title" style="font-size:1rem; color:#cbd5e1; margin-bottom:4px;"></div>
+                        <div id="m1-pred-direction" class="pred-dir-up">상승 🔺</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="stat-label">예측 확률</div>
+                        <div id="m1-pred-prob" style="font-size:2.2rem; font-weight:700; color:#fff;">66.0%</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">예측 적중률 (Hit Ratio)</div>
+                    <div class="stat-value" id="m1-hit-ratio" style="color:#818cf8;">60.16%</div>
+                    <div class="stat-sub" id="m1-test-days">총 123 거래일 검증</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">모델 누적 수익률</div>
+                    <div class="stat-value" id="m1-cum-strat" style="color:#34d399;">+67.88%</div>
+                    <div class="stat-sub">전략 트레이딩 실행</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">단순 보유 (Buy & Hold)</div>
+                    <div class="stat-value" id="m1-cum-buy-hold" style="color:#cbd5e1;">+5.58%</div>
+                    <div class="stat-sub">동일 기간 단순 보유</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">승률 (Win Rate) / MDD</div>
+                    <div class="stat-value" id="m1-win-rate" style="font-size:1.3rem;">55.8%</div>
+                    <div class="stat-sub" id="m1-mdd" style="color:#f87171;">최대 낙폭: -18.87%</div>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div style="margin-bottom:1rem;">
+                    <h3 style="font-size:1.1rem; font-weight:600;">누적 수익률 백테스트 곡선 (Walk-Forward)</h3>
+                    <p style="font-size:0.85rem; color:var(--text-muted)">시간 순 데이터 누출 없는 자율 예측 시뮬레이션 비교</p>
+                </div>
+                <div style="position: relative; height:340px; width:100%;">
+                    <canvas id="backtestChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODE 2: 2년 Out-of-Sample View -->
+        <div id="mode-2yr-content" style="display:none;">
+            <div class="results-grid">
+                <div class="stat-card" style="grid-column: span 2;">
+                    <div class="stat-label">데이터 분할 정보 (2년치 수집)</div>
+                    <div id="m2-split-info" style="font-size:0.95rem; color:#cbd5e1; margin-top:6px; line-height:1.6;"></div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">최근 1년 Out-of-Sample 적중률</div>
+                    <div class="stat-value" id="m2-hit-ratio" style="color:#818cf8;">53.30%</div>
+                    <div class="stat-sub" id="m2-test-days">최근 212 영업일 검증</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">전략 vs 단순보유 수익률</div>
+                    <div class="stat-value" id="m2-cum-strat" style="color:#34d399;">+17.01%</div>
+                    <div class="stat-sub" id="m2-cum-buy-hold">단순 보유: +2.14%</div>
+                </div>
+            </div>
+
+            <!-- Confusion Matrix Card -->
+            <div class="results-grid">
+                <div class="stat-card">
+                    <div class="stat-label">True Positive (상승 적중)</div>
+                    <div class="stat-value" id="m2-tp" style="color:#34d399;">47 회</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">False Positive (상승 오답)</div>
+                    <div class="stat-value" id="m2-fp" style="color:#f87171;">51 회</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">True Negative (하락 적중)</div>
+                    <div class="stat-value" id="m2-tn" style="color:#60a5fa;">66 회</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">False Negative (하락 오답)</div>
+                    <div class="stat-value" id="m2-fn" style="color:#fbbf24;">48 회</div>
+                </div>
+            </div>
+
+            <!-- Target Week Daily Breakdown Table -->
+            <div class="data-table-card">
+                <h3 id="m2-week-title" style="font-size:1.1rem; font-weight:600;">최근 주차 심층 분석 테이블</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>일자</th>
+                            <th>종가</th>
+                            <th>AI 예측 방향</th>
+                            <th>실제 결과 (등락률)</th>
+                            <th>적중 여부</th>
+                        </tr>
+                    </thead>
+                    <tbody id="m2-table-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- MODE 3: 시가 갭 예측 (코스피+수급) -->
+        <div id="mode-m3-content" style="display:none;">
+            <div class="results-grid">
+                <div class="prediction-box" style="grid-column: span 2;">
+                    <div>
+                        <div class="stat-label">내일 시가 갭 예측 (다음 영업일 출발 방향)</div>
+                        <div id="m3-title" style="font-size:0.9rem; color:#cbd5e1; margin-bottom:4px;"></div>
+                        <div id="m3-pred-direction" class="pred-dir-up" style="font-size:1.6rem;">상승갭 🔺</div>
+                        <div id="m3-gap-class" style="font-size:0.9rem; color:#94a3b8; margin-top:4px;"></div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="stat-label">상승갭 확률</div>
+                        <div id="m3-pred-prob" style="font-size:2.4rem; font-weight:700; color:#fff;">52.0%</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">시가 갭 방향 적중률</div>
+                    <div class="stat-value" id="m3-hit-ratio" style="color:#818cf8;">50.0%</div>
+                    <div class="stat-sub" id="m3-total-signals">총 - 회 예측</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">갭 매매 전략 수익률</div>
+                    <div class="stat-value" id="m3-cum-strat" style="color:#34d399;">+0.0%</div>
+                    <div class="stat-sub">상승갭 예측 시 매수 → 시가 청산</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">시가 전량 매수 수익률</div>
+                    <div class="stat-value" id="m3-cum-bh" style="color:#cbd5e1;">+0.0%</div>
+                    <div class="stat-sub" id="m3-mdd" style="color:#f87171;">MDD: -0.0%</div>
+                </div>
+
+                <!-- 혼동행렬 -->
+                <div class="stat-card" style="grid-column: span 2;">
+                    <div class="stat-label" style="margin-bottom:12px;">혼동 행렬 (시가 갭 방향)</div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <div style="background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); border-radius:10px; padding:14px; text-align:center;">
+                            <div style="font-size:0.8rem; color:#6ee7b7;">상승갭 예측 → 실제 상승 (TP)</div>
+                            <div id="m3-tp" style="font-size:2rem; font-weight:700; color:#10b981;">-</div>
+                        </div>
+                        <div style="background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.3); border-radius:10px; padding:14px; text-align:center;">
+                            <div style="font-size:0.8rem; color:#fca5a5;">상승갭 예측 → 실제 하락 (FP)</div>
+                            <div id="m3-fp" style="font-size:2rem; font-weight:700; color:#ef4444;">-</div>
+                        </div>
+                        <div style="background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.3); border-radius:10px; padding:14px; text-align:center;">
+                            <div style="font-size:0.8rem; color:#fca5a5;">하락갭 예측 → 실제 상승 (FN)</div>
+                            <div id="m3-fn" style="font-size:2rem; font-weight:700; color:#ef4444;">-</div>
+                        </div>
+                        <div style="background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); border-radius:10px; padding:14px; text-align:center;">
+                            <div style="font-size:0.8rem; color:#6ee7b7;">하락갭 예측 → 실제 하락 (TN)</div>
+                            <div id="m3-tn" style="font-size:2rem; font-weight:700; color:#10b981;">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 갭 누적 수익률 차트 -->
+            <div class="chart-card">
+                <div style="margin-bottom:1rem;">
+                    <h3 style="font-size:1.1rem; font-weight:600;">갭 매매 전략 vs 시가 전량 매수 누적 수익률</h3>
+                    <p style="font-size:0.85rem; color:var(--text-muted)">상승갭 예측 시 전날 종가→시가 매매 전략 / 매일 시가에 전량 매수 전략 비교</p>
+                </div>
+                <div style="position:relative; height:300px; width:100%;">
+                    <canvas id="gapChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 피처 중요도 & 상관관계 -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-top:1.5rem;">
+                <div class="chart-card">
+                    <h3 style="font-size:1rem; font-weight:600; margin-bottom:1rem;">피처 중요도 TOP 10</h3>
+                    <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">어떤 변수가 시가 갭에 가장 영향을 주나?</p>
+                    <div id="m3-feat-imp"></div>
+                </div>
+                <div class="chart-card">
+                    <h3 style="font-size:1rem; font-weight:600; margin-bottom:1rem;">상관관계 분석 TOP 10</h3>
+                    <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">전일 데이터 ↔ 다음날 시가 갭 선형 상관</p>
+                    <div id="m3-corr"></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let currentMode = '1yr';
+        let backtestChartObj = null;
+
+        function switchMode(mode) {
+            currentMode = mode;
+            document.getElementById('tab-1yr').className = mode === '1yr' ? 'tab-btn active' : 'tab-btn';
+            document.getElementById('tab-2yr').className = mode === '2yr' ? 'tab-btn active' : 'tab-btn';
+            document.getElementById('tab-m3').className = mode === 'm3' ? 'tab-btn active' : 'tab-btn';
+            document.getElementById('search-form').dispatchEvent(new Event('submit'));
+        }
+
+        document.getElementById('search-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const stockName = document.getElementById('stock-name').value.trim();
+            if (!stockName) return;
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('mode-1yr-content').style.display = 'none';
+            document.getElementById('mode-2yr-content').style.display = 'none';
+            document.getElementById('mode-m3-content').style.display = 'none';
+
+            let endpoint;
+            if (currentMode === '1yr') endpoint = '/api/predict';
+            else if (currentMode === '2yr') endpoint = '/api/predict_2year';
+            else endpoint = '/api/predict_model3';
+
+            fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ stock_name: stockName })
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                if (currentMode === '1yr') {
+                    renderMode1(data);
+                } else if (currentMode === '2yr') {
+                    renderMode2(data);
+                } else {
+                    renderMode3(data);
+                }
+            })
+            .catch(err => {
+                document.getElementById('loading').style.display = 'none';
+                alert('오류 발생: ' + err);
+            });
+        });
+
+        function renderMode1(res) {
+            const data = res.data;
+            document.getElementById('mode-1yr-content').style.display = 'block';
+
+            const badgeContainer = document.getElementById('cache-badge-container');
+            badgeContainer.innerHTML = res.cached ? 
+                `<div class="cache-badge cache-hit">⚡ SQLite 캐시 데이터 (오늘 조회됨)</div>` :
+                `<div class="cache-badge cache-miss">🔄 실시간 ML 계산 & SQLite 저장 완료</div>`;
+
+            document.getElementById('m1-title').innerText = `${data.stock_name} (${data.ticker}) | 백테스트: ${data.start_date} ~ ${data.end_date}`;
+            
+            const predDirEl = document.getElementById('m1-pred-direction');
+            predDirEl.innerText = data.tomorrow_pred;
+            predDirEl.className = data.tomorrow_pred.includes('상승') ? 'pred-dir-up' : 'pred-dir-down';
+            document.getElementById('m1-pred-prob').innerText = data.tomorrow_prob.toFixed(1) + '%';
+
+            document.getElementById('m1-hit-ratio').innerText = data.hit_ratio.toFixed(2) + '%';
+            document.getElementById('m1-test-days').innerText = `총 ${data.chart_dates.length} 거래일 검증`;
+            document.getElementById('m1-cum-strat').innerText = (data.cum_strat >= 0 ? '+' : '') + data.cum_strat.toFixed(2) + '%';
+            document.getElementById('m1-cum-buy-hold').innerText = (data.cum_buy_hold >= 0 ? '+' : '') + data.cum_buy_hold.toFixed(2) + '%';
+            document.getElementById('m1-win-rate').innerText = `${data.win_rate.toFixed(1)}% (${data.total_trades}회 매수)`;
+            document.getElementById('m1-mdd').innerText = `최대 낙폭(MDD): ${data.mdd.toFixed(2)}%`;
+
+            renderChart(data.chart_dates, data.cum_strat_series, data.cum_buy_hold_series);
+        }
+
+        function renderMode2(res) {
+            const data = res.data;
+            document.getElementById('mode-2yr-content').style.display = 'block';
+
+            const badgeContainer = document.getElementById('cache-badge-container');
+            badgeContainer.innerHTML = res.cached ? 
+                `<div class="cache-badge cache-hit">⚡ SQLite 2년 캐시 데이터 (오늘 조회됨)</div>` :
+                `<div class="cache-badge cache-miss">🔄 실시간 2년 ML 계산 & SQLite 저장 완료</div>`;
+
+            document.getElementById('m2-split-info').innerHTML = `
+                • 학습 구간 (Year -2 ~ Year -1): <b>${data.train_start} ~ ${data.train_end}</b> (${data.train_count} 영업일)<br>
+                • 검증 구간 (최근 1년 Out-of-Sample): <b>${data.test_start} ~ ${data.test_end}</b> (${data.test_count} 영업일)
+            `;
+
+            document.getElementById('m2-hit-ratio').innerText = data.hit_ratio.toFixed(2) + '%';
+            document.getElementById('m2-test-days').innerText = `최근 ${data.test_count} 영업일 검증`;
+            
+            document.getElementById('m2-cum-strat').innerText = (data.cum_strat >= 0 ? '+' : '') + data.cum_strat.toFixed(2) + '%';
+            document.getElementById('m2-cum-buy-hold').innerText = `단순 보유: ${data.cum_buy_hold >= 0 ? '+' : ''}${data.cum_buy_hold.toFixed(2)}% (MDD: ${data.mdd.toFixed(2)}%)`;
+
+            document.getElementById('m2-tp').innerText = `${data.tp} 회`;
+            document.getElementById('m2-fp').innerText = `${data.fp} 회`;
+            document.getElementById('m2-tn').innerText = `${data.tn} 회`;
+            document.getElementById('m2-fn').innerText = `${data.fn} 회`;
+
+            document.getElementById('m2-week-title').innerText = `최근 주차 (${data.target_week_start} ~ ${data.target_week_end}) 심층 분석 | 적중률: ${data.target_week_acc.toFixed(1)}%`;
+
+            const tbody = document.getElementById('m2-table-body');
+            tbody.innerHTML = '';
+            data.target_week_days.forEach(row => {
+                const tr = document.createElement('tr');
+                const badge = row.is_correct ? 
+                    `<span class="status-badge badge-correct">✅ 적중</span>` : 
+                    `<span class="status-badge badge-wrong">❌ 오답</span>`;
+                
+                tr.innerHTML = `
+                    <td>${row.date}</td>
+                    <td>${row.close.toLocaleString()}원</td>
+                    <td>${row.pred_label}</td>
+                    <td>${row.actual_label} (${row.return_pct >= 0 ? '+' : ''}${row.return_pct}%)</td>
+                    <td>${badge}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderChart(dates, stratSeries, buyHoldSeries) {
+            const ctx = document.getElementById('backtestChart').getContext('2d');
+            if (backtestChartObj) {
+                backtestChartObj.destroy();
+            }
+
+            backtestChartObj = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: 'AI 모델 전략 누적 수익률 (%)',
+                            data: stratSeries,
+                            borderColor: '#6366f1',
+                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                            borderWidth: 2.5,
+                            fill: true,
+                            tension: 0.2,
+                            pointRadius: 0
+                        },
+                        {
+                            label: '단순 보유 (Buy & Hold) (%)',
+                            data: buyHoldSeries,
+                            borderColor: '#94a3b8',
+                            borderDash: [4, 4],
+                            borderWidth: 1.5,
+                            fill: false,
+                            tension: 0.2,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#cbd5e1', font: { family: 'Pretendard', size: 13 } } }
+                    },
+                    scales: {
+                        x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8', maxTicksLimit: 10 } },
+                        y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8', callback: function(v) { return v + '%'; } } }
+                    }
+                }
+            });
+        }
+
+        function renderMode3(res) {
+            const data = res.data;
+            document.getElementById('mode-m3-content').style.display = 'block';
+
+            const badgeContainer = document.getElementById('cache-badge-container');
+            badgeContainer.innerHTML = res.cached ?
+                `<div class="cache-badge cache-hit">⚡ SQLite Model3 캐시 데이터 (오늘 조회됨)</div>` :
+                `<div class="cache-badge cache-miss">🔄 Model3 실시간 계산 & SQLite 저장 완료</div>`;
+
+            document.getElementById('m3-title').innerText =
+                `${data.stock_name || data.stock_name} (${data.ticker}) | ${data.data_start} ~ ${data.data_end} (${data.total_days}일)`;
+
+            const dirEl = document.getElementById('m3-pred-direction');
+            const isUp = (data.tomorrow_direction || '').includes('상승');
+            dirEl.innerText = isUp ? '상승갭 예측 🔺' : '하락갭 예측 🔻';
+            dirEl.className = isUp ? 'pred-dir-up' : 'pred-dir-down';
+            document.getElementById('m3-pred-prob').innerText = (data.tomorrow_prob || 0).toFixed(1) + '%';
+            document.getElementById('m3-gap-class').innerText = data.tomorrow_gap_class || '';
+
+            document.getElementById('m3-hit-ratio').innerText = (data.hit_ratio || 0).toFixed(2) + '%';
+            document.getElementById('m3-total-signals').innerText = `총 ${data.total_signals || 0}회 예측`;
+            document.getElementById('m3-cum-strat').innerText = ((data.cum_strat || 0) >= 0 ? '+' : '') + (data.cum_strat || 0).toFixed(2) + '%';
+            document.getElementById('m3-cum-bh').innerText = ((data.cum_bh || 0) >= 0 ? '+' : '') + (data.cum_bh || 0).toFixed(2) + '%';
+            document.getElementById('m3-mdd').innerText = `MDD: ${(data.mdd || 0).toFixed(2)}%`;
+            document.getElementById('m3-tp').innerText = `${data.tp || 0}회`;
+            document.getElementById('m3-fp').innerText = `${data.fp || 0}회`;
+            document.getElementById('m3-tn').innerText = `${data.tn || 0}회`;
+            document.getElementById('m3-fn').innerText = `${data.fn || 0}회`;
+
+            // 갭 누적 수익률 차트
+            const btDates = data.bt_dates || [];
+            const btStrat = (data.bt_cum_strat_series || []).map(v => ((v - 1) * 100).toFixed(2));
+            const btBh = (data.bt_cum_bh_series || []).map(v => ((v - 1) * 100).toFixed(2));
+
+            const gapCtx = document.getElementById('gapChart').getContext('2d');
+            if (window._gapChartObj) window._gapChartObj.destroy();
+            window._gapChartObj = new Chart(gapCtx, {
+                type: 'line',
+                data: {
+                    labels: btDates,
+                    datasets: [
+                        {
+                            label: '갭 매매 전략 (%)',
+                            data: btStrat,
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245,158,11,0.1)',
+                            borderWidth: 2.5,
+                            fill: true,
+                            tension: 0.2,
+                            pointRadius: 0
+                        },
+                        {
+                            label: '시가 전량 매수 (%)',
+                            data: btBh,
+                            borderColor: '#94a3b8',
+                            borderDash: [4, 4],
+                            borderWidth: 1.5,
+                            fill: false,
+                            tension: 0.2,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#cbd5e1', font: { family: 'Pretendard', size: 13 } } } },
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', maxTicksLimit: 10 } },
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', callback: v => v + '%' } }
+                    }
+                }
+            });
+
+            // 피처 중요도 막대
+            const featImpEl = document.getElementById('m3-feat-imp');
+            featImpEl.innerHTML = '';
+            (data.feature_importance || []).slice(0, 10).forEach((fi, i) => {
+                const pct = (fi.importance * 100).toFixed(1);
+                featImpEl.innerHTML += `
+                    <div style="margin-bottom:8px;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#cbd5e1; margin-bottom:3px;">
+                            <span>${i+1}. ${fi.feature}</span><span>${pct}%</span>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.08); border-radius:4px; height:8px; overflow:hidden;">
+                            <div style="height:100%; width:${pct}%; background:linear-gradient(90deg,#6366f1,#8b5cf6); border-radius:4px; transition:width 0.5s;"></div>
+                        </div>
+                    </div>`;
+            });
+
+            // 상관관계 테이블
+            const corrEl = document.getElementById('m3-corr');
+            corrEl.innerHTML = '';
+            (data.correlation || []).slice(0, 10).forEach((ci, i) => {
+                const corr = ci.correlation;
+                if (isNaN(corr)) return;
+                const color = corr > 0 ? '#10b981' : '#ef4444';
+                const sign = corr > 0 ? '+' : '';
+                corrEl.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.06); font-size:0.82rem;">
+                        <span style="color:#cbd5e1;">${i+1}. ${ci.feature}</span>
+                        <span style="font-weight:600; color:${color};">${sign}${corr.toFixed(4)}</span>
+                    </div>`;
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('search-form').dispatchEvent(new Event('submit'));
+        });
+    </script>
+</body>
+</html>
