@@ -1,0 +1,55 @@
+{
+  "project_name": "my_stock_auto",
+  "architecture": "4-Role Multi-Agent Worktree Pattern",
+  "roles": {
+    "manager": {
+      "name": "Manager",
+      "agent": "Antigravity",
+      "model": "Gemini Flash",
+      "workspace": "master",
+      "responsibilities": [
+        "Project Management & Architecture Design",
+        "Task Specification Generation (.agents/tasks/)",
+        "Workflow Governance"
+      ]
+    },
+    "coder": {
+      "name": "Coder",
+      "agent": "Cline",
+      "model": "qwen2.5-coder:14b",
+      "workspace": "Coder-Cline",
+      "responsibilities": [
+        "Source Code Implementation",
+        "Refactoring & Feature Branch Commits",
+        "Reading Task Specifications"
+      ]
+    },
+    "tester": {
+      "name": "Tester",
+      "agent": "Cline",
+      "model": "qwen2.5-coder:14b",
+      "workspace": "Tester-Cline",
+      "responsibilities": [
+        "Automated Test Execution",
+        "Self-Debugging & Bug Fixing",
+        "Test Report Generation"
+      ]
+    },
+    "reviewer": {
+      "name": "Reviewer",
+      "agent": "Antigravity",
+      "model": "Gemini Flash",
+      "workspace": "master",
+      "responsibilities": [
+        "Code Quality Review (Read-only)",
+        "Final Task Verification",
+        "Master Branch Merge Approval"
+      ]
+    }
+  },
+  "workspaces": {
+    "master": "C:/Users/gosys/orca/projects/my_stock_auto",
+    "coder": "C:/Users/gosys/orca/workspaces/my_stock_auto/coder",
+    "tester": "C:/Users/gosys/orca/workspaces/my_stock_auto/tester"
+  }
+}
