@@ -1,161 +1,108 @@
 # Workspace Multi-Agent Architecture Configuration (Orca + Antigravity)
 
-> ⚠️ **이 문서는 프로젝트의 모든 AI 에이전트가 반드시 준수해야 하는 강제 워크플로우입니다.**
-> Orchestrator 모델이 무엇이든(Gemini Flash, Claude Sonnet, 등) 아래 규칙은 예외 없이 적용됩니다.
+> ⚠️ **이 문서는 프로젝트의 모든 AI 에이전트(Manager, Coder, Tester, Reviewer)가 반드시 준수해야 하는 최상위 절대 강제 워크플로우입니다.**
+> Orchestrator 모델이 무엇이든(Gemini Flash, Claude Sonnet, 등) 아래 Multi-Role 격리 규칙은 예외 없이 무조건 적용됩니다.
 
 ---
 
-## 🚨 핵심 강제 규칙 (MANDATORY — 절대 위반 금지)
+## 🚨 100% 무조건 준수 강제 규칙 (MANDATORY — 절대 예외 없음)
 
-> **Orchestrator(Antigravity에서 실행 중인 모델)는 코드를 직접 작성하거나 파일을 직접 편집해서는 안 됩니다.**
-> 모든 코드 작성, 수정, 테스트는 반드시 **Cline Agent (pearlside worktree)** 에 위임해야 합니다.
+> **Orchestrator / Manager(Antigravity 등)는 소스 코드(`src/`, `.py`, `.js` 등)를 master 브랜치 또는 작업 공간에서 직접 작성/수정/이동해서는 안 됩니다.**
+> **모든 소스 코드 작성, 리팩토링, 파일 이동 및 테스트는 반드시 `Coder-Cline` 및 `Tester-Cline` 전용 Worktree 브랜치에 위임해야 합니다.**
 
-| 행동 | Orchestrator 허용 여부 |
-| :--- | :---: |
-| 요구사항 분석 & 아키텍처 설계 | ✅ 허용 |
-| 구현 명세(Spec) 작성 → `.agents/tasks/` 파일로 저장 | ✅ 허용 |
-| 완성된 코드의 최종 리뷰 & 승인 (APPROVED) | ✅ 허용 |
-| pearlside → master merge 승인 | ✅ 허용 |
-| **코드 직접 작성 (`write_to_file`, `replace_file_content` 등)** | ❌ **금지** |
-| **파일 직접 편집** | ❌ **금지** |
-| **Cline 없이 코드 배포** | ❌ **금지** |
+| 행동 | Manager / Reviewer 허용 여부 | Coder / Tester 허용 여부 |
+| :--- | :---: | :---: |
+| 요구사항 분석 & 아키텍처 설계 | ✅ 허용 | ❌ 미권장 |
+| 구현 명세(Spec) 작성 → `.agents/tasks/` 저장 | ✅ 허용 | ❌ 읽기 전용 |
+| **소스 코드 직접 작성/편집 (`write_to_file`, `replace_file_content` 등)** | ❌ **절대 금지** | ✅ **허용 (Coder/Tester Worktree)** |
+| **master 브랜치에서 직접 소스 코드 수정** | ❌ **절대 금지** | ❌ **절대 금지 (Coder 전용 브랜치 사용)** |
+| **파일 이동 및 디렉토리 구조 리팩토링** | ❌ **절대 금지 (명세만 작성)** | ✅ **허용 (Coder-Cline에서 수행)** |
+| 완성된 Coder/Tester 코드의 최종 리뷰 & 승인 (APPROVED) | ✅ 허용 | ❌ Reviewer에게 보고 |
+| `Coder-Cline` → `master` merge 승인 | ✅ 허용 | ❌ 승인 요청만 가능 |
 
 ---
 
-## 🗺️ Worktree 구조
+## 🗺️ Worktree & Branch 1:1 격리 구조 (삼각 공조 체계)
 
 ```
-C:/Users/gosys/orca/projects/my_stock_auto/          ← main worktree (master)
-                                                         Orchestrator가 읽기 전용으로 참조
-C:/Users/gosys/orca/workspaces/my_stock_auto/pearlside/  ← Cline worktree (pearlside branch)
-                                                             Cline이 실제 코드 작성/수정하는 공간
-```
+[① Main Worktree] (master)
+  └─ C:/Users/gosys/orca/projects/my_stock_auto
+  └─ 담당: Manager & Reviewer (Antigravity Gemini Flash)
+  └─ 역할: 요구사항 분석, .agents/ 문서 관리, 최종 리뷰 & Merge 승인만 수행 (소스 직접 수정 금지)
 
-- **master** : 최종 승인된 안정 코드 (Orchestrator Reviewer가 APPROVED한 코드만 merge)
-- **pearlside** : Cline이 작업하는 격리 공간. 실험/구현/테스트를 자유롭게 진행
+[② Coder Worktree] (Younseob/Coder-Cline)
+  └─ C:/Users/gosys/orca/workspaces/my_stock_auto/Coder-Cline
+  └─ 담당: Coder (Cline Qwen2.5-coder-14b)
+  └─ 역할: .agents/tasks/ 명세를 읽고 실제 소스 코드(src/) 작성, 파일 이동, 리팩토링 수행 및 독립 커밋
+
+[③ Tester Worktree] (Tester-Cline)
+  └─ C:/Users/gosys/orca/workspaces/my_stock_auto/Tester-Cline
+  └─ 담당: Tester (Cline Qwen2.5-coder-14b)
+  └─ 역할: Coder가 작성한 코드를 실행 및 자동 테스트, 디버깅 및 테스트 보고서 작성
+```
 
 ---
 
-## 🤖 에이전트 역할 분담 및 워크플로우 (4-Role Architecture)
+## 🤖 4-Role 멀티 에이전트 상세 역할 분담 및 워크플로우
 
 ```mermaid
 sequenceDiagram
     autonumber
     participant User as 사용자
-    participant Orch as Orchestrator (Planner/Reviewer)<br/>Antigravity 활성 모델
+    participant Manager as Manager (Antigravity)<br/>[master 브랜치]
     participant Task as .agents/tasks/<task>.md<br/>명세 파일
-    participant Cline as Cline Agent<br/>pearlside worktree<br/>qwen2.5-coder:14b
+    participant Coder as Coder (Cline)<br/>[Coder-Cline Worktree]
+    participant Tester as Tester (Cline)<br/>[Tester-Cline Worktree]
+    participant Reviewer as Reviewer (Antigravity)<br/>[master 브랜치]
 
-    User->>Orch: 작업 요청
-    Orch->>Orch: 아키텍처 설계 & 구현 명세 작성
-    Orch->>Task: 명세 파일 저장 (.agents/tasks/<task>.md)
-    Orch->>Cline: "task 파일 읽고 pearlside에서 구현해줘" (Cline에서 직접 지시)
+    User->>Manager: 작업 요청
+    Manager->>Manager: 아키텍처 설계 & 명세 작성 (소스 직접 수정 ❌)
+    Manager->>Task: 명세 파일 저장 (.agents/tasks/<task>.md)
+    Manager->>Coder: "Task 명세 읽고 Coder-Cline에서 구현해줘" 지시
 
-    loop Cline Local Dev Loop (pearlside 브랜치)
-        Cline->>Cline: 코드 구현 (파일 직접 편집)
-        Cline->>Cline: 터미널에서 실행 & 테스트
+    loop Coder Local Dev (Coder-Cline)
+        Coder->>Coder: 소스 코드 작성/리팩토링 및 Coder-Cline 커밋
+    end
+
+    Coder->>Tester: 구현 완료 전달
+    loop Tester Test Loop (Tester-Cline)
+        Tester->>Tester: 코드 실행 및 자동 테스트
         alt 테스트 실패
-            Cline->>Cline: 자율 수정 후 재테스트
+            Tester->>Coder: 디버깅 및 수정 요청
         end
     end
 
-    Cline->>Orch: 구현 완료 & 테스트 결과 보고
-    Orch->>Orch: 코드 리뷰 (pearlside 코드 읽기)
+    Tester->>Reviewer: 테스트 결과 및 리뷰 요청 보고
+    Reviewer->>Reviewer: Coder-Cline 코드 읽기 전용 검토
     alt APPROVED
-        Orch->>Orch: git merge pearlside → master
-        Orch->>User: 완료 보고
+        Reviewer->>Manager: Coder-Cline → master Merge 승인
+        Manager->>User: 완료 보고
     else 수정 필요
-        Orch->>Task: 보완 명세 업데이트
-        Orch->>Cline: 재작업 지시
+        Reviewer->>Task: 보완 명세 업데이트
+        Reviewer->>Coder: Coder-Cline 재작업 지시
     end
 ```
 
 ---
 
-## 📋 에이전트 상세 역할 정의
+## ⚙️ 실행 프로토콜 및 수칙
 
-| 구 분 | 에이전트 명칭 | 모델 / 환경 | 주요 역할 및 책임 |
-| :--- | :--- | :--- | :--- |
-| **Orchestrator** | **Planner** | Antigravity 활성 모델<br/>(Gemini / Claude / 기타) | • 요구사항 분석 & 아키텍처 설계<br/>• `.agents/tasks/` 에 구현 명세 작성<br/>• **코드 직접 작성 금지** |
-| **Local Agent** | **Cline Coder+Tester** | `qwen2.5-coder:14b`<br/>Cline (pearlside worktree) | • pearlside에서 파일 직접 편집<br/>• 터미널 실행 & 자율 테스트/수정<br/>• 완료 후 Orchestrator에 보고 |
-| **Orchestrator** | **Reviewer** | Antigravity 활성 모델<br/>(Gemini / Claude / 기타) | • pearlside 코드 최종 검토<br/>• APPROVED 시 master merge<br/>• 수정 필요 시 태스크 업데이트 |
+### Step 1 — Manager: 명세 작성 (소스 수정 ❌)
+Manager는 오직 `.agents/tasks/` 디렉토리에 명세 파일만을 생성/업데이트합니다.
 
----
+### Step 2 — Coder & Tester: 격리 Worktree에서 실행
+Coder는 `Coder-Cline` 워크스페이스에서만 코드를 작성/수정하고 커밋합니다. 절대 `master` 공간을 건드리지 않습니다.
 
-## ⚙️ 실행 프로토콜
-
-### Step 1 — Orchestrator: 구현 명세 작성
-
+### Step 3 — Reviewer: 리뷰 & Merge
+Reviewer는 `Coder-Cline` 브랜치의 코드를 검토한 후 승인 시에만 `master`로 merge를 수행합니다:
 ```bash
-# .agents/tasks/ 디렉토리에 명세 파일 생성 (Orchestrator가 작성)
-# 예: .agents/tasks/feat_model4_volume_analysis.md
-```
-
-명세 파일 포맷 → `.agents/tasks/TASK_TEMPLATE.md` 참고
-
-### Step 2 — Cline에서 태스크 실행
-
-Cline VSCode 확장에서 직접:
-```
-"pearlside worktree 경로: C:\Users\gosys\orca\workspaces\my_stock_auto\pearlside
-.agents/tasks/<task명>.md 파일을 읽고 명세에 따라 구현해줘.
-구현 완료 후 py <파일>.py 실행해서 테스트 결과를 알려줘."
-```
-
-### Step 3 — Orchestrator: 리뷰 & Merge
-
-```bash
-# Cline이 완료 보고 후 Orchestrator가 코드 검토
-# APPROVED 시 master에 merge
-git -C C:\Users\gosys\orca\projects\my_stock_auto merge pearlside --no-ff -m "feat: <기능명> (reviewed & approved)"
+git -C C:\Users\gosys\orca\projects\my_stock_auto merge Younseob/Coder-Cline --no-ff -m "feat: <기능명> (reviewed & approved)"
 ```
 
 ---
 
-## 📁 태스크 파일 컨벤션
+## 🔀 브랜치 관리 원칙
 
-위치: `.agents/tasks/<task_name>.md`
-
-```markdown
-# Task: <기능명>
-
-## 목표
-<무엇을 구현하는가>
-
-## 대상 파일
-- `pearlside/<파일명>.py` (신규 생성 or 수정)
-
-## 구현 명세
-### 입력
-<입력값, 파라미터>
-
-### 출력
-<출력값, 반환 형식>
-
-### 핵심 로직
-<알고리즘, 라이브러리, 주요 처리 단계>
-
-### 제약 조건
-<성능, 예외처리, 의존성>
-
-## 테스트 조건
-- [ ] <테스트 명령 및 통과 기준 1>
-- [ ] <테스트 명령 및 통과 기준 2>
-
-## 완료 기준
-모든 테스트 통과 후 Orchestrator Reviewer에게 결과 보고
-```
-
----
-
-## 🔀 Git 브랜치 전략
-
-```
-master  ←──── merge (APPROVED 후만)
-   │
-pearlside  ←── Cline이 작업 (자유롭게 커밋)
-```
-
-- Cline은 pearlside에서 자유롭게 커밋
-- Orchestrator가 APPROVED하면 master로 merge
-- 실패한 실험 코드는 pearlside에만 남고 master에 영향 없음
+* `master`: 프로덕션 안정 브랜치. Reviewer 승인 없이 직접 코드 수정 금지.
+* `Younseob/Coder-Cline`: Coder 에이전트 전용 격리 개발 브랜치.
+* `Tester-Cline`: Tester 에이전트 전용 격리 검증 브랜치.
