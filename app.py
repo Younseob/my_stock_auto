@@ -5,18 +5,21 @@ from datetime import datetime
 import numpy as np
 from flask import Flask, render_template, request, jsonify
 
-import database as db
-from stock_predictor import (
+# src 모듈 경로 추가
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from src.db import database as db
+from src.models.stock_predictor import (
     get_ticker_by_name,
     fetch_market_data,
     feature_engineering,
     run_walk_forward_backtest
 )
-from two_year_predictor import (
+from src.models.two_year_predictor import (
     fetch_2year_data,
     analyze_2year_weekly_predictions
 )
-from model3_predictor import (
+from src.models.model3_predictor import (
     run_model3,
     get_ticker_by_name as get_ticker_m3
 )
