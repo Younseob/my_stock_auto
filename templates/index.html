@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 주가 예측 & 백테스트 대시보드 (Mode 1 ~ Mode 4)</title>
+    <title>AI 주가 예측 & 백테스트 대시보드</title>
     <!-- Google Fonts & Chart.js -->
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -77,19 +77,15 @@
             -webkit-text-fill-color: transparent;
         }
 
-        /* Mode Badges & Tabs */
+        /* Tabs */
         .tab-bar {
             display: flex;
             gap: 10px;
             margin-bottom: 1.5rem;
-            flex-wrap: wrap;
         }
 
         .tab-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 20px;
+            padding: 12px 24px;
             background: rgba(15, 23, 42, 0.6);
             border: 1px solid var(--card-border);
             border-radius: 12px;
@@ -107,23 +103,8 @@
             box-shadow: 0 0 15px var(--primary-glow);
         }
 
-        .mode-badge {
-            background: rgba(255, 255, 255, 0.15);
-            color: #fff;
-            padding: 3px 8px;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-
-        .tab-btn.active .mode-badge {
-            background: rgba(0, 0, 0, 0.25);
-        }
-
-        /* Search Section & Dropdown */
+        /* Search Section */
         .search-card {
-            position: relative;
             background: var(--card-bg);
             backdrop-filter: blur(16px);
             border: 1px solid var(--card-border);
@@ -139,7 +120,6 @@
         }
 
         .input-group {
-            position: relative;
             flex: 1;
         }
 
@@ -176,52 +156,6 @@
         .btn-search:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
-        }
-
-        /* Dropdown candidates list */
-        .dropdown-menu {
-            display: none;
-            position: absolute;
-            top: 105%;
-            left: 0;
-            right: 0;
-            background: #111827;
-            border: 1px solid rgba(99, 102, 241, 0.3);
-            border-radius: 12px;
-            max-height: 250px;
-            overflow-y: auto;
-            z-index: 100;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-        }
-
-        .dropdown-header {
-            padding: 8px 14px;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            background: rgba(15, 23, 42, 0.9);
-        }
-
-        .dropdown-item {
-            padding: 12px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            transition: background 0.2s;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-        }
-
-        .dropdown-item:hover {
-            background: rgba(99, 102, 241, 0.2);
-        }
-
-        .dropdown-item .stock-ticker {
-            font-size: 0.85rem;
-            color: #818cf8;
-            background: rgba(99, 102, 241, 0.15);
-            padding: 2px 8px;
-            border-radius: 4px;
         }
 
         .cache-badge {
@@ -393,45 +327,33 @@
                 <div class="logo-icon">📊</div>
                 <div>
                     <h1>AI 주가 예측 & 백테스트 대시보드</h1>
-                    <p style="font-size:0.85rem; color:var(--text-muted)">Mode 1~4 Multi-Engine & Partial Stock Search</p>
+                    <p style="font-size:0.85rem; color:var(--text-muted)">Walk-Forward Engine, 2-Year Out-of-Sample Accuracy & SQLite Cache</p>
                 </div>
             </div>
             <div id="cache-badge-container"></div>
         </header>
 
-        <!-- Mode Select Tabs (Mode 1 ~ Mode 4) -->
+        <!-- Mode Select Tabs -->
         <div class="tab-bar">
-            <button class="tab-btn active" id="tab-1yr" onclick="switchMode('1yr')">
-                <span class="mode-badge">Mode 1</span> 1년 워크포워드 시뮬레이션
-            </button>
-            <button class="tab-btn" id="tab-2yr" onclick="switchMode('2yr')">
-                <span class="mode-badge">Mode 2</span> 2년 Out-of-Sample 검증
-            </button>
-            <button class="tab-btn" id="tab-m3" onclick="switchMode('m3')">
-                <span class="mode-badge">Mode 3</span> 시가 갭 예측 (코스피+수급)
-            </button>
-            <button class="tab-btn" id="tab-m4" onclick="switchMode('m4')">
-                <span class="mode-badge">Mode 4</span> 차트 패턴 유사도 매칭
-            </button>
+            <button class="tab-btn active" id="tab-1yr" onclick="switchMode('1yr')">⚡ 모드 1: 1년 워크포워드 시뮬레이션</button>
+            <button class="tab-btn" id="tab-2yr" onclick="switchMode('2yr')">🔬 모드 2: 2년 Out-of-Sample 정확도 검증</button>
+            <button class="tab-btn" id="tab-m3" onclick="switchMode('m3')">🌅 모드 3: 시가 갭 예측 (코스피+수급)</button>
         </div>
 
-        <!-- Search Bar with Partial Search Dropdown -->
+        <!-- Search Bar -->
         <div class="search-card">
             <form class="search-form" id="search-form">
                 <div class="input-group">
-                    <input type="text" id="stock-name" placeholder="종목명 또는 검색어 입력 (예: 하이닉스, 삼성, 씨에스윈드)" value="SK하이닉스" autocomplete="off" required>
-                    <!-- 연관 종목 선택 드롭다운 -->
-                    <div id="stock-dropdown" class="dropdown-menu"></div>
+                    <input type="text" id="stock-name" placeholder="종목명 입력 (예: 삼성전자, SK하이닉스, 현대차)" value="삼성전자" required>
                 </div>
                 <button type="submit" class="btn-search">예측 & 분석 실행</button>
             </form>
-            <div id="search-alert" class="alert-danger" style="display:none; margin-top:12px; padding:12px 16px; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.4); border-radius:12px; color:#f87171; font-size:0.95rem; font-weight:600;"></div>
         </div>
 
         <!-- Loading -->
         <div class="loading-spinner" id="loading">
             <div class="spinner"></div>
-            <p style="color:var(--text-muted)">데이터 수집 및 머신러닝 계산 중...</p>
+            <p style="color:var(--text-muted)">데이터 수집 및 머신러닝 백테스팅 계산 중...</p>
         </div>
 
         <!-- MODE 1: 1년 워크포워드 View -->
@@ -439,7 +361,7 @@
             <div class="results-grid">
                 <div class="prediction-box">
                     <div>
-                        <div class="stat-label">내일 주가 방향 예측 (Mode 1)</div>
+                        <div class="stat-label">내일 주가 방향 예측 (D+1)</div>
                         <div id="m1-title" style="font-size:1rem; color:#cbd5e1; margin-bottom:4px;"></div>
                         <div id="m1-pred-direction" class="pred-dir-up">상승 🔺</div>
                     </div>
@@ -489,7 +411,7 @@
         <div id="mode-2yr-content" style="display:none;">
             <div class="results-grid">
                 <div class="stat-card" style="grid-column: span 2;">
-                    <div class="stat-label">데이터 분할 정보 (2년치 수집 - Mode 2)</div>
+                    <div class="stat-label">데이터 분할 정보 (2년치 수집)</div>
                     <div id="m2-split-info" style="font-size:0.95rem; color:#cbd5e1; margin-top:6px; line-height:1.6;"></div>
                 </div>
 
@@ -506,6 +428,7 @@
                 </div>
             </div>
 
+            <!-- Confusion Matrix Card -->
             <div class="results-grid">
                 <div class="stat-card">
                     <div class="stat-label">True Positive (상승 적중)</div>
@@ -525,6 +448,7 @@
                 </div>
             </div>
 
+            <!-- Target Week Daily Breakdown Table -->
             <div class="data-table-card">
                 <h3 id="m2-week-title" style="font-size:1.1rem; font-weight:600;">최근 주차 심층 분석 테이블</h3>
                 <table>
@@ -548,7 +472,7 @@
             <div class="results-grid">
                 <div class="prediction-box" style="grid-column: span 2;">
                     <div>
-                        <div class="stat-label">내일 시가 갭 예측 (Mode 3)</div>
+                        <div class="stat-label">내일 시가 갭 예측 (다음 영업일 출발 방향)</div>
                         <div id="m3-title" style="font-size:0.9rem; color:#cbd5e1; margin-bottom:4px;"></div>
                         <div id="m3-pred-direction" class="pred-dir-up" style="font-size:1.6rem;">상승갭 🔺</div>
                         <div id="m3-gap-class" style="font-size:0.9rem; color:#94a3b8; margin-top:4px;"></div>
@@ -577,6 +501,7 @@
                     <div class="stat-sub" id="m3-mdd" style="color:#f87171;">MDD: -0.0%</div>
                 </div>
 
+                <!-- 혼동행렬 -->
                 <div class="stat-card" style="grid-column: span 2;">
                     <div class="stat-label" style="margin-bottom:12px;">혼동 행렬 (시가 갭 방향)</div>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
@@ -600,6 +525,7 @@
                 </div>
             </div>
 
+            <!-- 갭 누적 수익률 차트 -->
             <div class="chart-card">
                 <div style="margin-bottom:1rem;">
                     <h3 style="font-size:1.1rem; font-weight:600;">갭 매매 전략 vs 시가 전량 매수 누적 수익률</h3>
@@ -610,55 +536,18 @@
                 </div>
             </div>
 
+            <!-- 피처 중요도 & 상관관계 -->
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-top:1.5rem;">
                 <div class="chart-card">
                     <h3 style="font-size:1rem; font-weight:600; margin-bottom:1rem;">피처 중요도 TOP 10</h3>
+                    <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">어떤 변수가 시가 갭에 가장 영향을 주나?</p>
                     <div id="m3-feat-imp"></div>
                 </div>
                 <div class="chart-card">
                     <h3 style="font-size:1rem; font-weight:600; margin-bottom:1rem;">상관관계 분석 TOP 10</h3>
+                    <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">전일 데이터 ↔ 다음날 시가 갭 선형 상관</p>
                     <div id="m3-corr"></div>
                 </div>
-            </div>
-        </div>
-
-        <!-- MODE 4: 차트 패턴 유사도 매칭 View -->
-        <div id="mode-m4-content" style="display:none;">
-            <div class="results-grid">
-                <div class="prediction-box">
-                    <div>
-                        <div class="stat-label">차트 패턴 유사도 예측 (Mode 4)</div>
-                        <div id="m4-title" style="font-size:1rem; color:#cbd5e1; margin-bottom:4px;"></div>
-                        <div id="m4-pred-direction" class="pred-dir-up">상승 🔺</div>
-                    </div>
-                    <div style="text-align:right;">
-                        <div class="stat-label">상승 구간 비율</div>
-                        <div id="m4-up-prob" style="font-size:2.2rem; font-weight:700; color:#fff;">66.7%</div>
-                    </div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-label">과거 유사 구간 평균 변동폭</div>
-                    <div class="stat-value" id="m4-avg-return" style="color:#34d399;">+1.25%</div>
-                    <div class="stat-sub">Top 3 유사 구간 기준</div>
-                </div>
-            </div>
-
-            <div class="data-table-card">
-                <h3 style="font-size:1.1rem; font-weight:600; margin-bottom:1rem;">과거 Top 3 유사 차트 패턴 구간 분석</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>순위</th>
-                            <th>과거 패턴 구간 (5영업일)</th>
-                            <th>코사인 유사도</th>
-                            <th>다음날 일자</th>
-                            <th>다음날 종가 / 등락률</th>
-                        </tr>
-                    </thead>
-                    <tbody id="m4-table-body">
-                    </tbody>
-                </table>
             </div>
         </div>
 
@@ -667,150 +556,29 @@
     <script>
         let currentMode = '1yr';
         let backtestChartObj = null;
-        let searchDebounceTimer = null;
 
         function switchMode(mode) {
             currentMode = mode;
             document.getElementById('tab-1yr').className = mode === '1yr' ? 'tab-btn active' : 'tab-btn';
             document.getElementById('tab-2yr').className = mode === '2yr' ? 'tab-btn active' : 'tab-btn';
             document.getElementById('tab-m3').className = mode === 'm3' ? 'tab-btn active' : 'tab-btn';
-            document.getElementById('tab-m4').className = mode === 'm4' ? 'tab-btn active' : 'tab-btn';
-            
-            closeDropdown();
-            runPrediction(document.getElementById('stock-name').value.trim());
+            document.getElementById('search-form').dispatchEvent(new Event('submit'));
         }
 
-        // 종목 부분 검색 API 호출 및 드롭다운 표시
-        const stockInput = document.getElementById('stock-name');
-        const dropdown = document.getElementById('stock-dropdown');
-
-        function showAlert(msg) {
-            const alertEl = document.getElementById('search-alert');
-            if (alertEl) {
-                alertEl.innerText = msg;
-                alertEl.style.display = 'block';
-            }
-        }
-
-        function hideAlert() {
-            const alertEl = document.getElementById('search-alert');
-            if (alertEl) {
-                alertEl.style.display = 'none';
-            }
-        }
-
-        stockInput.addEventListener('input', function() {
-            const query = this.value.trim();
-            hideAlert();
-            if (!query) {
-                closeDropdown();
-                return;
-            }
-
-            clearTimeout(searchDebounceTimer);
-            searchDebounceTimer = setTimeout(() => {
-                fetch(`/api/search_stock?query=${encodeURIComponent(query)}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        if ((data.status === 'multiple' || data.status === 'single' || data.status === 'success') && data.items && data.items.length > 0) {
-                            renderDropdown(data.items);
-                        } else {
-                            closeDropdown();
-                        }
-                    })
-                    .catch(() => closeDropdown());
-            }, 250);
-        });
-
-        function renderDropdown(items) {
-            dropdown.innerHTML = `<div class="dropdown-header">연관 종목 선택 (${items.length}개 후보)</div>`;
-            items.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'dropdown-item';
-                div.innerHTML = `
-                    <span>${item.name}</span>
-                    <span class="stock-ticker">${item.ticker}</span>
-                `;
-                div.onclick = function() {
-                    hideAlert();
-                    stockInput.value = item.name;
-                    closeDropdown();
-                    runPrediction(item.name);
-                };
-                dropdown.appendChild(div);
-            });
-            dropdown.style.display = 'block';
-        }
-
-        function closeDropdown() {
-            dropdown.style.display = 'none';
-        }
-
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('.input-group')) {
-                closeDropdown();
-            }
-        });
-
-        // 폼 제출 이벤트
         document.getElementById('search-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            const query = stockInput.value.trim();
-            if (!query) return;
-
-            hideAlert();
-            // 부분 검색 먼저 실행
-            fetch(`/api/search_stock?query=${encodeURIComponent(query)}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status === 'error') {
-                        closeDropdown();
-                        showAlert(data.message || `'${query}'에 해당하는 종목을 찾을 수 없습니다. 정확한 종목명을 입력하세요.`);
-                    } else if (data.status === 'single') {
-                        hideAlert();
-                        closeDropdown();
-                        const singleItem = data.item || (data.items && data.items[0]);
-                        const targetName = singleItem ? singleItem.name : query;
-                        stockInput.value = targetName;
-                        runPrediction(targetName);
-                    } else if (data.status === 'multiple') {
-                        hideAlert();
-                        renderDropdown(data.items);
-                    } else {
-                        if (data.items && data.items.length === 1) {
-                            hideAlert();
-                            closeDropdown();
-                            stockInput.value = data.items[0].name;
-                            runPrediction(data.items[0].name);
-                        } else if (data.items && data.items.length > 1) {
-                            hideAlert();
-                            renderDropdown(data.items);
-                        } else {
-                            closeDropdown();
-                            showAlert(`'${query}'에 해당하는 종목을 찾을 수 없습니다. 정확한 종목명을 입력하세요.`);
-                        }
-                    }
-                })
-                .catch(() => {
-                    closeDropdown();
-                    showAlert(`'${query}'에 해당하는 종목을 찾을 수 없습니다. 정확한 종목명을 입력하세요.`);
-                });
-        });
-
-        function runPrediction(stockName) {
+            const stockName = document.getElementById('stock-name').value.trim();
             if (!stockName) return;
 
             document.getElementById('loading').style.display = 'block';
             document.getElementById('mode-1yr-content').style.display = 'none';
             document.getElementById('mode-2yr-content').style.display = 'none';
             document.getElementById('mode-m3-content').style.display = 'none';
-            document.getElementById('mode-m4-content').style.display = 'none';
 
             let endpoint;
             if (currentMode === '1yr') endpoint = '/api/predict';
             else if (currentMode === '2yr') endpoint = '/api/predict_2year';
-            else if (currentMode === 'm3') endpoint = '/api/predict_model3';
-            else endpoint = '/api/predict_pattern';
+            else endpoint = '/api/predict_model3';
 
             fetch(endpoint, {
                 method: 'POST',
@@ -821,6 +589,9 @@
                 const contentType = res.headers.get('content-type') || '';
                 if (!res.ok || !contentType.includes('application/json')) {
                     const text = await res.text();
+                    if (res.status === 504 || text.includes('Gateway') || text.includes('504')) {
+                        throw new Error('서버 연산 시간이 초과되었습니다 (504 Gateway Timeout). 다시 한 번 클릭해 주세요.');
+                    }
                     throw new Error(`서버 응답 오류 (${res.status})`);
                 }
                 return res.json();
@@ -831,16 +602,20 @@
                     alert(data.error);
                     return;
                 }
-                if (currentMode === '1yr') renderMode1(data);
-                else if (currentMode === '2yr') renderMode2(data);
-                else if (currentMode === 'm3') renderMode3(data);
-                else renderMode4(data);
+                if (currentMode === '1yr') {
+                    renderMode1(data);
+                } else if (currentMode === '2yr') {
+                    renderMode2(data);
+                } else {
+                    renderMode3(data);
+                }
             })
             .catch(err => {
                 document.getElementById('loading').style.display = 'none';
                 alert('알림: ' + err.message);
             });
-        }
+
+        });
 
         function renderMode1(res) {
             const data = res.data;
@@ -848,10 +623,10 @@
 
             const badgeContainer = document.getElementById('cache-badge-container');
             badgeContainer.innerHTML = res.cached ? 
-                `<div class="cache-badge cache-hit">⚡ [Mode 1] SQLite 캐시 HIT</div>` :
-                `<div class="cache-badge cache-miss">🔄 [Mode 1] 실시간 ML 계산완료</div>`;
+                `<div class="cache-badge cache-hit">⚡ SQLite 캐시 데이터 (오늘 조회됨)</div>` :
+                `<div class="cache-badge cache-miss">🔄 실시간 ML 계산 & SQLite 저장 완료</div>`;
 
-            document.getElementById('m1-title').innerText = `${data.stock_name} (${data.ticker}) | ${data.start_date} ~ ${data.end_date}`;
+            document.getElementById('m1-title').innerText = `${data.stock_name} (${data.ticker}) | 백테스트: ${data.start_date} ~ ${data.end_date}`;
             
             const predDirEl = document.getElementById('m1-pred-direction');
             predDirEl.innerText = data.tomorrow_pred;
@@ -874,25 +649,26 @@
 
             const badgeContainer = document.getElementById('cache-badge-container');
             badgeContainer.innerHTML = res.cached ? 
-                `<div class="cache-badge cache-hit">⚡ [Mode 2] SQLite 캐시 HIT</div>` :
-                `<div class="cache-badge cache-miss">🔄 [Mode 2] 실시간 ML 계산완료</div>`;
+                `<div class="cache-badge cache-hit">⚡ SQLite 2년 캐시 데이터 (오늘 조회됨)</div>` :
+                `<div class="cache-badge cache-miss">🔄 실시간 2년 ML 계산 & SQLite 저장 완료</div>`;
 
             document.getElementById('m2-split-info').innerHTML = `
-                • 학습 구간: <b>${data.train_start} ~ ${data.train_end}</b> (${data.train_count} 영업일)<br>
-                • 검증 구간 (Out-of-Sample): <b>${data.test_start} ~ ${data.test_end}</b> (${data.test_count} 영업일)
+                • 학습 구간 (Year -2 ~ Year -1): <b>${data.train_start} ~ ${data.train_end}</b> (${data.train_count} 영업일)<br>
+                • 검증 구간 (최근 1년 Out-of-Sample): <b>${data.test_start} ~ ${data.test_end}</b> (${data.test_count} 영업일)
             `;
 
             document.getElementById('m2-hit-ratio').innerText = data.hit_ratio.toFixed(2) + '%';
             document.getElementById('m2-test-days').innerText = `최근 ${data.test_count} 영업일 검증`;
+            
             document.getElementById('m2-cum-strat').innerText = (data.cum_strat >= 0 ? '+' : '') + data.cum_strat.toFixed(2) + '%';
-            document.getElementById('m2-cum-buy-hold').innerText = `단순 보유: ${data.cum_buy_hold >= 0 ? '+' : ''}${data.cum_buy_hold.toFixed(2)}%`;
+            document.getElementById('m2-cum-buy-hold').innerText = `단순 보유: ${data.cum_buy_hold >= 0 ? '+' : ''}${data.cum_buy_hold.toFixed(2)}% (MDD: ${data.mdd.toFixed(2)}%)`;
 
             document.getElementById('m2-tp').innerText = `${data.tp} 회`;
             document.getElementById('m2-fp').innerText = `${data.fp} 회`;
             document.getElementById('m2-tn').innerText = `${data.tn} 회`;
             document.getElementById('m2-fn').innerText = `${data.fn} 회`;
 
-            document.getElementById('m2-week-title').innerText = `최근 주차 (${data.target_week_start} ~ ${data.target_week_end}) 분석 | 적중률: ${data.target_week_acc.toFixed(1)}%`;
+            document.getElementById('m2-week-title').innerText = `최근 주차 (${data.target_week_start} ~ ${data.target_week_end}) 심층 분석 | 적중률: ${data.target_week_acc.toFixed(1)}%`;
 
             const tbody = document.getElementById('m2-table-body');
             tbody.innerHTML = '';
@@ -913,17 +689,64 @@
             });
         }
 
+        function renderChart(dates, stratSeries, buyHoldSeries) {
+            const ctx = document.getElementById('backtestChart').getContext('2d');
+            if (backtestChartObj) {
+                backtestChartObj.destroy();
+            }
+
+            backtestChartObj = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: 'AI 모델 전략 누적 수익률 (%)',
+                            data: stratSeries,
+                            borderColor: '#6366f1',
+                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                            borderWidth: 2.5,
+                            fill: true,
+                            tension: 0.2,
+                            pointRadius: 0
+                        },
+                        {
+                            label: '단순 보유 (Buy & Hold) (%)',
+                            data: buyHoldSeries,
+                            borderColor: '#94a3b8',
+                            borderDash: [4, 4],
+                            borderWidth: 1.5,
+                            fill: false,
+                            tension: 0.2,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#cbd5e1', font: { family: 'Pretendard', size: 13 } } }
+                    },
+                    scales: {
+                        x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8', maxTicksLimit: 10 } },
+                        y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8', callback: function(v) { return v + '%'; } } }
+                    }
+                }
+            });
+        }
+
         function renderMode3(res) {
             const data = res.data;
             document.getElementById('mode-m3-content').style.display = 'block';
 
             const badgeContainer = document.getElementById('cache-badge-container');
             badgeContainer.innerHTML = res.cached ?
-                `<div class="cache-badge cache-hit">⚡ [Mode 3] SQLite 캐시 HIT</div>` :
-                `<div class="cache-badge cache-miss">🔄 [Mode 3] 실시간 계산완료</div>`;
+                `<div class="cache-badge cache-hit">⚡ SQLite Model3 캐시 데이터 (오늘 조회됨)</div>` :
+                `<div class="cache-badge cache-miss">🔄 Model3 실시간 계산 & SQLite 저장 완료</div>`;
 
             document.getElementById('m3-title').innerText =
-                `${data.stock_name} (${data.ticker}) | ${data.data_start} ~ ${data.data_end}`;
+                `${data.stock_name || data.stock_name} (${data.ticker}) | ${data.data_start} ~ ${data.data_end} (${data.total_days}일)`;
 
             const dirEl = document.getElementById('m3-pred-direction');
             const isUp = (data.tomorrow_direction || '').includes('상승');
@@ -942,6 +765,7 @@
             document.getElementById('m3-tn').innerText = `${data.tn || 0}회`;
             document.getElementById('m3-fn').innerText = `${data.fn || 0}회`;
 
+            // 갭 누적 수익률 차트
             const btDates = data.bt_dates || [];
             const btStrat = (data.bt_cum_strat_series || []).map(v => ((v - 1) * 100).toFixed(2));
             const btBh = (data.bt_cum_bh_series || []).map(v => ((v - 1) * 100).toFixed(2));
@@ -986,6 +810,7 @@
                 }
             });
 
+            // 피처 중요도 막대
             const featImpEl = document.getElementById('m3-feat-imp');
             featImpEl.innerHTML = '';
             (data.feature_importance || []).slice(0, 10).forEach((fi, i) => {
@@ -996,11 +821,12 @@
                             <span>${i+1}. ${fi.feature}</span><span>${pct}%</span>
                         </div>
                         <div style="background:rgba(255,255,255,0.08); border-radius:4px; height:8px; overflow:hidden;">
-                            <div style="height:100%; width:${pct}%; background:linear-gradient(90deg,#6366f1,#8b5cf6); border-radius:4px;"></div>
+                            <div style="height:100%; width:${pct}%; background:linear-gradient(90deg,#6366f1,#8b5cf6); border-radius:4px; transition:width 0.5s;"></div>
                         </div>
                     </div>`;
             });
 
+            // 상관관계 테이블
             const corrEl = document.getElementById('m3-corr');
             corrEl.innerHTML = '';
             (data.correlation || []).slice(0, 10).forEach((ci, i) => {
@@ -1016,83 +842,8 @@
             });
         }
 
-        function renderMode4(res) {
-            const data = res.data;
-            document.getElementById('mode-m4-content').style.display = 'block';
-
-            const badgeContainer = document.getElementById('cache-badge-container');
-            badgeContainer.innerHTML = `<div class="cache-badge cache-miss">🔍 [Mode 4] 패턴 유사도 매칭 완료</div>`;
-
-            document.getElementById('m4-title').innerText = `${data.stock_name} (${data.ticker}) | 최근 5영업일 패턴 매칭`;
-            const predDirEl = document.getElementById('m4-pred-direction');
-            predDirEl.innerText = data.tomorrow_pred;
-            predDirEl.className = data.tomorrow_pred.includes('상승') ? 'pred-dir-up' : 'pred-dir-down';
-
-            document.getElementById('m4-up-prob').innerText = (data.up_prob || 0).toFixed(1) + '%';
-            document.getElementById('m4-avg-return').innerText = ((data.avg_return || 0) >= 0 ? '+' : '') + (data.avg_return || 0).toFixed(2) + '%';
-
-            const tbody = document.getElementById('m4-table-body');
-            tbody.innerHTML = '';
-            (data.top_matches || []).forEach(match => {
-                const tr = document.createElement('tr');
-                const retColor = match.d_plus_1_return > 0 ? '#10b981' : (match.d_plus_1_return < 0 ? '#ef4444' : '#cbd5e1');
-                const sign = match.d_plus_1_return > 0 ? '+' : '';
-                tr.innerHTML = `
-                    <td><b>${match.rank}위</b></td>
-                    <td>${match.start_date} ~ ${match.end_date}</td>
-                    <td><b style="color:#818cf8;">${match.similarity}%</b></td>
-                    <td>${match.d_plus_1_date}</td>
-                    <td>${match.d_plus_1_close.toLocaleString()}원 (<span style="color:${retColor}; font-weight:700;">${sign}${match.d_plus_1_return}%</span>)</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function renderChart(dates, stratSeries, buyHoldSeries) {
-            const ctx = document.getElementById('backtestChart').getContext('2d');
-            if (backtestChartObj) backtestChartObj.destroy();
-
-            backtestChartObj = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: dates,
-                    datasets: [
-                        {
-                            label: 'AI 모델 전략 누적 수익률 (%)',
-                            data: stratSeries,
-                            borderColor: '#6366f1',
-                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                            borderWidth: 2.5,
-                            fill: true,
-                            tension: 0.2,
-                            pointRadius: 0
-                        },
-                        {
-                            label: '단순 보유 (Buy & Hold) (%)',
-                            data: buyHoldSeries,
-                            borderColor: '#94a3b8',
-                            borderDash: [4, 4],
-                            borderWidth: 1.5,
-                            fill: false,
-                            tension: 0.2,
-                            pointRadius: 0
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { labels: { color: '#cbd5e1', font: { family: 'Pretendard', size: 13 } } } },
-                    scales: {
-                        x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8', maxTicksLimit: 10 } },
-                        y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8', callback: v => v + '%' } }
-                    }
-                }
-            });
-        }
-
         window.addEventListener('DOMContentLoaded', () => {
-            runPrediction('SK하이닉스');
+            document.getElementById('search-form').dispatchEvent(new Event('submit'));
         });
     </script>
 </body>

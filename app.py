@@ -184,7 +184,7 @@ def search_stock():
 def predict():
     """Mode 1: 기본 1년 워크포워드 백테스트"""
     req_data = request.get_json() or {}
-    stock_name = req_data.get('stock_name', '').strip()
+    stock_name = req_data.get('stock_name', '').strip() or '삼성전자'
     
     if not stock_name:
         return jsonify({'error': '종목명을 입력해 주세요.'}), 400
@@ -283,7 +283,7 @@ def predict():
 def predict_2year():
     """Mode 2: 2년 기간 주간 예측 분석"""
     req_data = request.get_json() or {}
-    stock_name = req_data.get('stock_name', '').strip()
+    stock_name = req_data.get('stock_name', '').strip() or '삼성전자'
     
     if not stock_name:
         return jsonify({'error': '종목명을 입력해 주세요.'}), 400
@@ -355,7 +355,7 @@ def predict_2year():
 def predict_model3():
     """Mode 3: 전일 종가 & 코스피 + 수급 데이터 기반 다음날 시가 갭 예측"""
     req_data = request.get_json() or {}
-    stock_name = req_data.get('stock_name', '').strip()
+    stock_name = req_data.get('stock_name', '').strip() or '삼성전자'
 
     if not stock_name:
         return jsonify({'error': '종목명을 입력해 주세요.'}), 400
