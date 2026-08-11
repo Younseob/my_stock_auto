@@ -52,7 +52,7 @@ def index():
 @app.route('/api/predict', methods=['POST'])
 def predict():
     req_data = request.get_json() or {}
-    stock_name = req_data.get('stock_name', '').strip()
+    stock_name = req_data.get('stock_name', '').strip() or '삼성전자'
     
     if not stock_name:
         return jsonify({'error': '종목명을 입력해 주세요.'}), 400
@@ -149,7 +149,7 @@ def predict():
 @app.route('/api/predict_2year', methods=['POST'])
 def predict_2year():
     req_data = request.get_json() or {}
-    stock_name = req_data.get('stock_name', '').strip()
+    stock_name = req_data.get('stock_name', '').strip() or '삼성전자'
     
     if not stock_name:
         return jsonify({'error': '종목명을 입력해 주세요.'}), 400
@@ -221,7 +221,7 @@ def predict_2year():
 def predict_model3():
     """Model 3: 전일 종가 & 코스피 + 수급 데이터 기반 다음날 시가 갭 예측"""
     req_data = request.get_json() or {}
-    stock_name = req_data.get('stock_name', '').strip()
+    stock_name = req_data.get('stock_name', '').strip() or '삼성전자'
 
     if not stock_name:
         return jsonify({'error': '종목명을 입력해 주세요.'}), 400
