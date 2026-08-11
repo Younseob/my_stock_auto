@@ -333,6 +333,32 @@
             <div id="cache-badge-container"></div>
         </header>
 
+        <!-- Mode 1~4 초보자용 직관적 가이드 카드 -->
+        <div class="card mb-4" style="background: rgba(30, 41, 59, 0.6); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.2rem;">
+            <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 0.8rem; color: #a5b4fc; display: flex; align-items: center; gap: 8px;">
+                <span>💡 AI 예측 모드(Mode 1 ~ Mode 4) 완벽 가이드</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; font-size: 0.88rem; line-height: 1.5;">
+                <div style="background: rgba(15, 23, 42, 0.6); padding: 10px 14px; border-radius: 8px; border-left: 3px solid #6366f1;">
+                    <strong style="color: #c7d2fe;">Mode 1 (1년 백테스팅기)</strong><br>
+                    <span style="color: var(--text-muted);">최근 1년간의 일별 데이터로 AI의 매매 전략을 백테스트하고 내일의 주가 방향을 예측합니다.</span>
+                </div>
+                <div style="background: rgba(15, 23, 42, 0.6); padding: 10px 14px; border-radius: 8px; border-left: 3px solid #10b981;">
+                    <strong style="color: #a7f3d0;">Mode 2 (2년 주간분석기)</strong><br>
+                    <span style="color: var(--text-muted);">최근 2년간의 주간 단위 추세를 분석하여 중장기적인 승률과 이번 주 주가 흐름을 제시합니다.</span>
+                </div>
+                <div style="background: rgba(15, 23, 42, 0.6); padding: 10px 14px; border-radius: 8px; border-left: 3px solid #f59e0b;">
+                    <strong style="color: #fde68a;">Mode 3 (시가 갭상승 & 수급)</strong><br>
+                    <span style="color: var(--text-muted);">코스피, 외국인/기관 수급, 거래량을 기계학습으로 종합 분석하여 내일 시가 갭상승 가능성을 예측합니다.</span>
+                </div>
+                <div style="background: rgba(15, 23, 42, 0.6); padding: 10px 14px; border-radius: 8px; border-left: 3px solid #ec4899;">
+                    <strong style="color: #fbcfe8;">Mode 4 (차트 패턴 매칭)</strong><br>
+                    <span style="color: var(--text-muted);">과거 10년 차트 중 현재 주가 흐름과 가장 똑같은 top 5 유사 과거 패턴을 찾아 미래를 추정합니다.</span>
+                </div>
+            </div>
+        </div>
+
+
         <!-- Mode Select Tabs -->
         <div class="tab-bar">
             <button class="tab-btn active" id="tab-1yr" onclick="switchMode('1yr')">⚡ 모드 1: 1년 워크포워드 시뮬레이션</button>
