@@ -1,23 +1,23 @@
 # Workspace Multi-Agent Architecture Configuration (Orca + Antigravity)
 
-> ⚠️ **이 문서는 프로젝트의 모든 AI 에이전트(Manager, Coder, Tester, Reviewer)가 반드시 준수해야 하는 최상위 자동 오케스트레이션 워크플로우입니다.**
+> ⚠️ **이 문서는 프로젝트의 모든 AI 에이전트(Manager, Coder, Tester, Reviewer)가 반드시 준수해야 하는 최상위 오케스트레이션 영구 제약 수칙입니다.**
 
 ---
 
-## 🚨 100% 무조건 준수 자동 오케스트레이션 수칙 (MANDATORY & AUTO-APPROVE)
+## 🚨 [절대 엄금] Antigravity Manager 툴 호출 완전 금지 규칙 (STRICT PROHIBITION)
 
-### 📌 100% 자동 파이프라인 (Auto-Approval Non-Interactive Protocol)
+### 📌 차후 터미널/세션 재시작 시에도 100% 준수되는 영구 제약 수칙
 
-1. **Manager (Antigravity)**:
-   - 사용자 요구사항 수신 시 오직 `.agents/tasks/순번_YYMMDD_내용.md` 명세서 작성만 수행.
-   - 명세서 작성 즉시 `invoke_subagent`로 Coder 에이전트 파이프라인 자동 호출.
+1. **`invoke_subagent` 도구 호출 100% 절대 금지**:
+   - Manager(Antigravity)는 어떠한 경우에도 내장 서브에이전트 생성 도구(`invoke_subagent`)를 호출하지 않는다.
+   - internal subagent를 부르는 것은 Orca ADE 엔진과 로컬 Ollama GPU의 개입을 차단하는 심각한 구멍이므로 **절대 엄금**한다.
 
-2. **Coder $\rightarrow$ Tester (Subagent Pipeline)**:
-   - `Coder-Cline` 및 `Tester-Cline` 워크스페이스에서 자동 수행 및 자동 검증.
+2. **명세서 작성 후 즉시 턴 종료 (STRICT END TURN)**:
+   - Manager는 오직 `.agents/tasks/순번_YYMMDD_내용.md` 명세서 파일 1개만 작성한다.
+   - **명세서 작성 직후 더 이상 어떠한 도구도 부르지 않고 즉시 턴을 마감(Stop calling tools / End Turn)하여 제어권을 Orca ADE 엔진으로 100% 이관한다.**
 
-3. **Reviewer (Antigravity Gemini 3.6 Flash) — [100% 자율 자동 승인]**:
-   - **사용자에게 별도의 질문이나 승인 요청(Approve Request)을 묻지 않고 100% 자율 자동 진행합니다.**
-   - Coder/Tester 완수 알림 수신 즉시 Manager 당초 명세서와 Coder 구현 코드를 1:1 비교 검토하여 이상이 없을 경우 자율적으로 `APPROVED` 판정 $\rightarrow$ `git merge` $\rightarrow$ `git push origin master`까지 **단 한 번의 차단 없이 원스톱(One-Stop) 자동 완수**합니다.
+3. **로컬 RTX 5080 Ollama Coder 자동 구동**:
+   - Manager가 턴을 마감하면 Orca ADE 엔진이 `AGENTS.md`를 파싱하여 `Coder-Cline` 워크스페이스에서 **실제 로컬 RTX 5080 GPU의 Ollama `qwen2.5-coder:14b` Coder Agent**를 실행한다.
 
 ---
 
@@ -25,36 +25,6 @@
 
 | 브랜치 / 워크스페이스 | 담당 에이전트 / 모델 | 주요 책무 |
 | :--- | :--- | :--- |
-| `master`<br/>(`orca/projects/my_stock_auto`) | **Manager & Reviewer**<br/>(Antigravity Gemini 3.6 Flash) | • 단순 문의 즉시 답변<br/>• 명세서 작성 (`.agents/tasks/`)<br/>• 파이프라인 자동 호출<br/>• **100% 자율 검토, Auto-Approve, Merge & Push 자동 완수** |
-| `Younseob/Coder-Cline`<br/>(`orca/workspaces/.../Coder-Cline`) | **Coder**<br/>(Cline Qwen2.5-coder-14b) | • 명세서 읽고 소스 코드 구현, 리팩토링, 파일 이동 & 커밋 |
-| `Tester-Cline`<br/>(`orca/workspaces/.../Tester-Cline`) | **Tester**<br/>(Cline Qwen2.5-coder-14b) | • Coder가 작성한 코드 자동 실행, 테스트 & 검증 |
-
----
-
-## 🔄 100% 원스톱 자동 순환 루프 (Sequence Diagram)
-
-```mermaid
-sequenceDiagram
-    autonumber
-    participant User as 사용자
-    participant Manager as Manager (Antigravity)<br/>[master]
-    participant Task as Task 명세서<br/>[.agents/tasks/]
-    participant Coder as Coder Agent<br/>[Coder-Cline]
-    participant Tester as Tester Agent<br/>[Tester-Cline]
-    participant Reviewer as Reviewer (Antigravity)<br/>[master]
-
-    User->>Manager: 기능 추가 / 코드 수정 요청
-    Manager->>Task: 명세서 작성 (순번_YYMMDD_내용.md)
-    Manager->>Coder: invoke_subagent 파이프라인 자동 호출 (Master 대기)
-
-    Coder->>Coder: Coder-Cline에서 구현 & 커밋
-    Coder->>Tester: 테스트 및 검증 요청
-    Tester->>Tester: Tester-Cline에서 실행 & 자동 테스트
-    Tester-->>Reviewer: 작업 완수 알림 수신
-
-    Reviewer->>Task: Manager 설계 요구사항 확인
-    Reviewer->>Coder: Coder 구현 코드(git diff) 1:1 비교 검토
-    Reviewer->>Reviewer: 100% 자율 APPROVED 승인 (사용자에게 다시 묻지 않음)
-    Reviewer->>Manager: git merge Younseob/Coder-Cline & git push 실행
-    Manager-->>User: 완료 및 배포 자동 보고
-```
+| `master`<br/>(`orca/projects/my_stock_auto`) | **Manager & Reviewer**<br/>(Antigravity Gemini 3.6 Flash) | • 명세서 작성 후 **즉시 턴 종료 (invoke_subagent 금지)**<br/>• Orca ADE가 Coder/Tester 완수 후 제어권 반환 시 **Merge & Push 자율 수행** |
+| `Younseob/Coder-Cline`<br/>(`orca/workspaces/.../Coder-Cline`) | **Real Coder**<br/>(Local RTX 5080 Ollama Qwen2.5-coder-14b) | • Orca ADE 엔진이 직접 호출하여 소스 코드 구현 & 커밋 전담 |
+| `Tester-Cline`<br/>(`orca/workspaces/.../Tester-Cline`) | **Real Tester**<br/>(Local RTX 5080 Ollama Qwen2.5-coder-14b) | • Orca ADE 엔진이 직접 호출하여 자동 실행 & 100% PASS 검증 전담 |

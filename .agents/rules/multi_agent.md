@@ -1,27 +1,15 @@
-# Multi-Agent Workflow Rule: 문의 vs 코드 수정 분기 및 4-Role 루프 규칙
+# Multi-Agent Governance Rules & Strict Prohibition
 
-> ⚠️ **이 규칙은 Antigravity에서 실행되는 모든 모델에 예외 없이 적용됩니다.**
-
----
-
-## 🚨 100% 절대 원칙 (ABSOLUTE MANDATORY RULES)
-
-### 1. Master(Manager) 세션의 두 가지 처리 분기
-
-* **[분기 A] 단순 문의 / 설명 / 질의응답**:
-  - `master` 세션(Antigravity)에서 소스 코드를 읽어 직접 분석하고 사용자에게 답변합니다.
-  - 이 경우 Coder/Tester 루프를 호출하지 않습니다.
-
-* **[분기 B] 코드 수정 / 파일 이동 / 리팩토링 / 기능 추가**:
-  - **`master` 세션에서 절대로 소스 코드를 직접 편집/이동하지 않습니다.**
-  - 반드시 `Manager`가 명세서(`.agents/tasks/<task>.md`) 작성 $\rightarrow$ `Coder` 구현 $\rightarrow$ `Tester` 검증 $\rightarrow$ `Reviewer` 승인 & Merge 루프를 사용합니다.
+> ⚠️ **이 규정은 차후 새로운 세션이나 터미널이 열려도 100% 강제 적용되는 영구 제약 수칙입니다.**
 
 ---
 
-## 📁 Worktree 1:1 매칭 경로
+## 🚫 Manager (Antigravity) 행동의 절대금지 조항 (Strict Prohibition)
 
-| 브랜치 | 경로 | 담당 및 역할 |
-| :--- | :--- | :--- |
-| `master` | `C:\Users\gosys\orca\projects\my_stock_auto` | Manager/Reviewer 전용 (단순 문의 답변, 명세 작성, 코드 리뷰 & Merge) |
-| `Younseob/Coder-Cline` | `C:\Users\gosys\orca\workspaces\my_stock_auto\Coder-Cline` | Coder 전용 (소스 코드 직접 작성, 리팩토링, 파일 이동 및 커밋) |
-| `Tester-Cline` | `C:\Users\gosys\orca\workspaces\my_stock_auto\Tester-Cline` | Tester 전용 (터미널 실행, 자동 테스트, 자율 수정) |
+1. **`invoke_subagent` 도구 호출 금지**:
+   - Manager는 `invoke_subagent` 도구를 호출할 권한이 없다.
+   - 내장 서브에이전트를 호출하는 행위는 Orca ADE 상위 엔진과 로컬 Ollama GPU(`qwen2.5-coder:14b`)의 자동 개입을 차단하므로 **엄격히 금지**된다.
+
+2. **명세서 작성 후 즉시 도구 호출 중단 (End Turn)**:
+   - Manager는 `.agents/tasks/순번_YYMMDD_내용.md` 작성 후 **어떠한 도구도 연속 호출하지 않고 턴을 즉시 마감**한다.
+   - 제어권을 Orca ADE 오케스트레이션 엔진으로 넘겨 로컬 RTX 5080 Ollama가 Coder 작업을 100% 전담하도록 보장한다.
