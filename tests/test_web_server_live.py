@@ -22,6 +22,9 @@ class WebServerLiveTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         content = response.get_data(as_text=True)
         self.assertIn('<!doctype html>', content.lower())
+        self.assertIn('Mode별 분석 가이드', content)
+        self.assertIn('상관관계 &amp; 피쳐 지표 상세 설명', content.replace('&', '&amp;').replace('&amp;amp;', '&amp;'))
+
 
     def test_search_stock_api(self):
         """2) GET /api/search_stock?query=삼성전자: 종목 부분 검색 API HTTP 200 OK 검증"""
