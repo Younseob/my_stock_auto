@@ -158,11 +158,26 @@ def search_stock():
         return jsonify({'status': 'error', 'message': '검색어를 입력해 주세요.', 'items': [], 'count': 0}), 400
 
     items = search_stocks(query)
-    return jsonify({
-        'status': 'success',
-        'count': len(items),
-        'items': items
-    })
+    if len(items) == 0:
+        return jsonify({
+            'status': 'error',
+            'message': f"'{query}'에 해당하는 종목을 찾을 수 없습니다. 정확한 종목명을 입력하세요.",
+            'items': [],
+            'count': 0
+        }), 200
+    elif len(items) == 1:
+        return jsonify({
+            'status': 'single',
+            'item': items[0],
+            'items': items,
+            'count': 1
+        })
+    else:
+        return jsonify({
+            'status': 'multiple',
+            'count': len(items),
+            'items': items
+        })
 
 
 @app.route('/api/predict', methods=['POST'])
