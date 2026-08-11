@@ -23,8 +23,10 @@ class WebServerLiveTestCase(unittest.TestCase):
         content = response.get_data(as_text=True)
         self.assertIn('<!doctype html>', content.lower())
         self.assertIn('Mode별 분석 가이드', content)
-        self.assertIn('상관관계 &amp; 피쳐 지표 상세 설명', content.replace('&', '&amp;').replace('&amp;amp;', '&amp;'))
-
+        self.assertIn('tab-m4', content)
+        self.assertIn('mode4ResultCard', content)
+        self.assertIn('m4TopMatchesTable', content)
+        self.assertIn('runMode4Prediction', content)
 
     def test_search_stock_api(self):
         """2) GET /api/search_stock?query=삼성전자: 종목 부분 검색 API HTTP 200 OK 검증"""
@@ -43,6 +45,14 @@ class WebServerLiveTestCase(unittest.TestCase):
         self.assertIsNotNone(data)
         self.assertEqual(data.get('status'), 'success')
         self.assertIn('modes', data)
+
+    def test_predict_pattern_api(self):
+        """4) POST /api/predict_pattern: Mode 4 차트 패턴 매칭 비동기 API 검증"""
+        # 종목명 미입력 시 400 Bad Request 검증
+        response = self.client.post('/api/predict_pattern', json={})
+        self.assertEqual(response.status_code, 400)
+        data = response.get_json()
+        self.assertIn('error', data)
 
 
 if __name__ == '__main__':

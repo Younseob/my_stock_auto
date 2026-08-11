@@ -466,6 +466,7 @@
             <button class="tab-btn active" id="tab-1yr" onclick="switchMode('1yr')">⚡ 모드 1: 1년 워크포워드 시뮬레이션</button>
             <button class="tab-btn" id="tab-2yr" onclick="switchMode('2yr')">🔬 모드 2: 2년 Out-of-Sample 정확도 검증</button>
             <button class="tab-btn" id="tab-m3" onclick="switchMode('m3')">🌅 모드 3: 시가 갭 예측 (코스피+수급)</button>
+            <button class="tab-btn" id="tab-m4" onclick="switchMode('m4')">📈 모드 4: 차트 패턴 매칭</button>
         </div>
 
         <!-- Mode별 분석 가이드 (초보자용 안내) -->
@@ -750,12 +751,70 @@
             </div>
         </div>
 
+        <!-- MODE 4: 차트 패턴 매칭 View -->
+        <div id="mode-m4-content" style="display:none;">
+            <div id="mode4ResultCard" class="results-grid">
+                <div class="prediction-box" style="grid-column: span 2;">
+                    <div>
+                        <div class="stat-label">차트 패턴 매칭 내일 주가 예측 (D+1)</div>
+                        <div id="m4-title" style="font-size:0.9rem; color:#cbd5e1; margin-bottom:4px;"></div>
+                        <div id="m4-pred-direction" class="pred-dir-up">상승 🔺</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="stat-label">과거 패턴 상승 확률</div>
+                        <div id="m4-up-prob" style="font-size:2.4rem; font-weight:700; color:#fff;">0.0%</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">평균 예상 수익률 (D+1)</div>
+                    <div class="stat-value" id="m4-avg-return" style="color:#34d399;">+0.00%</div>
+                    <div class="stat-sub">Top 5 유사 과거 구간 익일 평균</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">패턴 매칭 상승 확률</div>
+                    <div class="stat-value" id="m4-up-prob-card" style="color:#818cf8;">0.0%</div>
+                    <div class="stat-sub" id="m4-match-count">Top 5 구간 중 0개 상승</div>
+                </div>
+            </div>
+
+            <!-- Top 5 유사 차트 목록 테이블 -->
+            <div class="data-table-card">
+                <h3 style="font-size:1.1rem; font-weight:600; margin-bottom:0.5rem;">Top 5 유사 차트 패턴 목록</h3>
+                <table id="m4TopMatchesTable">
+                    <thead>
+                        <tr>
+                            <th>순위</th>
+                            <th>과거 기간</th>
+                            <th>유사도 점수</th>
+                            <th>익일 주가 변동률 (D+1)</th>
+                            <th>과거 종가 → D+1 종가</th>
+                        </tr>
+                    </thead>
+                    <tbody id="m4-table-body">
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 현재 차트 시각화 -->
+            <div class="chart-card">
+                <div style="margin-bottom:1rem;">
+                    <h3 style="font-size:1.1rem; font-weight:600;">현재 주가 흐름 (가장 최근 패턴)</h3>
+                    <p style="font-size:0.85rem; color:var(--text-muted)">최근 주가 종가 추이 시각화</p>
+                </div>
+                <div style="position: relative; height:300px; width:100%;">
+                    <canvas id="patternChart"></canvas>
+                </div>
+            </div>
+        </div>
 
     </div>
 
     <script>
         let currentMode = '1yr';
         let backtestChartObj = null;
+        let patternChartObj = null;
 
         function toggleGuideCard() {
             const body = document.getElementById('guide-card-body');
@@ -784,11 +843,11 @@
         }
 
         function switchMode(mode) {
-
             currentMode = mode;
             document.getElementById('tab-1yr').className = mode === '1yr' ? 'tab-btn active' : 'tab-btn';
             document.getElementById('tab-2yr').className = mode === '2yr' ? 'tab-btn active' : 'tab-btn';
             document.getElementById('tab-m3').className = mode === 'm3' ? 'tab-btn active' : 'tab-btn';
+            document.getElementById('tab-m4').className = mode === 'm4' ? 'tab-btn active' : 'tab-btn';
             document.getElementById('search-form').dispatchEvent(new Event('submit'));
         }
 
@@ -801,11 +860,18 @@
             document.getElementById('mode-1yr-content').style.display = 'none';
             document.getElementById('mode-2yr-content').style.display = 'none';
             document.getElementById('mode-m3-content').style.display = 'none';
+            document.getElementById('mode-m4-content').style.display = 'none';
 
             let endpoint;
             if (currentMode === '1yr') endpoint = '/api/predict';
             else if (currentMode === '2yr') endpoint = '/api/predict_2year';
-            else endpoint = '/api/predict_model3';
+            else if (currentMode === 'm3') endpoint = '/api/predict_model3';
+            else if (currentMode === 'm4') endpoint = '/api/predict_pattern';
+
+            if (currentMode === 'm4') {
+                runMode4Prediction(stockName);
+                return;
+            }
 
             fetch(endpoint, {
                 method: 'POST',
@@ -833,7 +899,7 @@
                     renderMode1(data);
                 } else if (currentMode === '2yr') {
                     renderMode2(data);
-                } else {
+                } else if (currentMode === 'm3') {
                     renderMode3(data);
                 }
             })
@@ -1066,6 +1132,127 @@
                         <span style="color:#cbd5e1;">${i+1}. ${ci.feature}</span>
                         <span style="font-weight:600; color:${color};">${sign}${corr.toFixed(4)}</span>
                     </div>`;
+            });
+        }
+
+        function runMode4Prediction(stockName) {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('mode-1yr-content').style.display = 'none';
+            document.getElementById('mode-2yr-content').style.display = 'none';
+            document.getElementById('mode-m3-content').style.display = 'none';
+            document.getElementById('mode-m4-content').style.display = 'none';
+
+            fetch('/api/predict_pattern', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ stock_name: stockName })
+            })
+            .then(async res => {
+                const contentType = res.headers.get('content-type') || '';
+                if (!res.ok || !contentType.includes('application/json')) {
+                    const text = await res.text();
+                    if (res.status === 504 || text.includes('Gateway') || text.includes('504')) {
+                        throw new Error('서버 연산 시간이 초과되었습니다 (504 Gateway Timeout). 다시 한 번 클릭해 주세요.');
+                    }
+                    throw new Error(`서버 응답 오류 (${res.status})`);
+                }
+                return res.json();
+            })
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                renderMode4(data);
+            })
+            .catch(err => {
+                document.getElementById('loading').style.display = 'none';
+                alert('알림: ' + err.message);
+            });
+        }
+
+        function renderMode4(res) {
+            const data = res.data;
+            document.getElementById('mode-m4-content').style.display = 'block';
+
+            const badgeContainer = document.getElementById('cache-badge-container');
+            badgeContainer.innerHTML = `<div class="cache-badge cache-hit">⚡ Mode 4 차트 패턴 매칭 완료</div>`;
+
+            document.getElementById('m4-title').innerText = `${data.stock_name} (${data.ticker}) | 최근 5영업일 패턴 매칭`;
+
+            const predDirEl = document.getElementById('m4-pred-direction');
+            const isUp = (data.tomorrow_pred || '').includes('상승');
+            predDirEl.innerText = data.tomorrow_pred || (isUp ? '상승 🔺' : '하락 🔻');
+            predDirEl.className = isUp ? 'pred-dir-up' : 'pred-dir-down';
+
+            const upProb = (data.up_prob || 0).toFixed(1);
+            document.getElementById('m4-up-prob').innerText = upProb + '%';
+            document.getElementById('m4-up-prob-card').innerText = upProb + '%';
+
+            const avgRet = data.avg_return || 0;
+            const avgRetEl = document.getElementById('m4-avg-return');
+            avgRetEl.innerText = (avgRet >= 0 ? '+' : '') + avgRet.toFixed(2) + '%';
+            avgRetEl.style.color = avgRet >= 0 ? '#34d399' : '#f87171';
+
+            const totalMatches = (data.top_matches || []).length;
+            const upCount = (data.top_matches || []).filter(m => m.d_plus_1_return > 0).length;
+            document.getElementById('m4-match-count').innerText = `Top ${totalMatches} 구간 중 ${upCount}개 상승`;
+
+            // Table render
+            const tbody = document.getElementById('m4-table-body');
+            tbody.innerHTML = '';
+            (data.top_matches || []).forEach(match => {
+                const tr = document.createElement('tr');
+                const isMatchUp = match.d_plus_1_return > 0;
+                const returnBadge = isMatchUp ? 
+                    `<span class="status-badge badge-correct">+${match.d_plus_1_return}% 🔺</span>` : 
+                    `<span class="status-badge badge-wrong">${match.d_plus_1_return}% 🔻</span>`;
+
+                tr.innerHTML = `
+                    <td><b style="color:#818cf8;">Rank ${match.rank}</b></td>
+                    <td>${match.start_date} ~ ${match.end_date}</td>
+                    <td><b style="color:#60a5fa;">${match.similarity}%</b></td>
+                    <td>${returnBadge}</td>
+                    <td>${match.past_end_close ? match.past_end_close.toLocaleString() : '-'}원 → ${match.d_plus_1_close ? match.d_plus_1_close.toLocaleString() : '-'}원 (${match.d_plus_1_date || ''})</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Chart render
+            const dates = data.current_dates || [];
+            const prices = data.current_raw || [];
+            const ctx = document.getElementById('patternChart').getContext('2d');
+            if (patternChartObj) {
+                patternChartObj.destroy();
+            }
+            patternChartObj = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: `${data.stock_name} 최근 종가 흐름`,
+                        data: prices,
+                        borderColor: '#ec4899',
+                        backgroundColor: 'rgba(236, 72, 153, 0.1)',
+                        borderWidth: 2.5,
+                        fill: true,
+                        tension: 0.2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#cbd5e1', font: { family: 'Pretendard', size: 13 } } }
+                    },
+                    scales: {
+                        x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } },
+                        y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8', callback: v => v.toLocaleString() + '원' } }
+                    }
+                }
             });
         }
 
