@@ -53,7 +53,7 @@ INITIAL_CONFIG = {
         "reviewer": {
             "name": "Reviewer",
             "agent": "Antigravity",
-            "model": "Gemini Flash",
+            "model": "Gemini 3.6 Flash",
             "workspace": "master",
             "responsibilities": [
                 "Code Quality Review (Read-only)",
